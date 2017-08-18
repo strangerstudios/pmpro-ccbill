@@ -1,12 +1,11 @@
 <?php
 
+//set this in your wp-config.php for debugging
+//define('PMPRO_CCBILL_DEBUG', true);
+
 global $wpdb, $gateway_environment, $logstr;
 
-/*
-$fh = fopen("HV_DEBUG_CCBILL.txt", "w");
-fwrite($fh, print_r($_POST, true));
-fwrite($fh, print_r($_GET, true));
-fclose($fh);*/
+$logstr = ''; //will put debug info here and write to ccbill_webhook_log.txt
 
 $event_type = pmpro_getParam('eventType', 'REQUEST');
 
@@ -14,7 +13,7 @@ $response = array();
 
 foreach($_REQUEST as $key => $value)
 {
-	$response[$key] = $value;
+	$response[$key] = sanitize_text_field($value);
 }
 
 //Full reference of event types and responses:
@@ -30,40 +29,24 @@ switch($event_type)
 		
 		if (pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) ) {
 			//Log the event
+			pmpro_ccbill_webhook_log("Checkout processed (".$morder->code. ")"."success!");
 		}
+		
+		pmpro_ccbill_Exit();
 		
 	break;
 
-	case 'NewSaleFailure':
-		//Just a notification. They should have already been denied at CCBill
-	break;
-
-/*
-	case 'UpgradeSuccess':
-	break;
-
-	case 'UpSaleSuccess':
-	break;
-
-	case 'UpSaleFailure':
-	break;
-
-	case 'CrossSaleSuccess':
-	break;
-
-	case 'CrossSaleFailure':
-	break;*/
-
 	case 'Cancellation':
-	break;
-
-	case 'Expiration':
-	break;
-
-	case 'BillingDateChange':
-	break;
-
-	case 'CustomerDataUpdate':
+		
+		$subscription_id = $response['subscriptionId'];
+		
+		$morder = new MemberOrder( $order_id );
+		$morder->getLastMemberOrderBySubscriptionTransactionID($subscription_id);
+		$morder->getMembershipLevel();
+		$morder->getUser();
+		
+		if(pmpro_ccbill_RecurringCancel($morder))
+			pmpro_ccbill_Exit();
 	break;
 
 	case 'RenewalSuccess':
@@ -76,27 +59,15 @@ switch($event_type)
 		
 		pmpro_ccbill_ChangeMembershipLevel($response, $morder);
 		
+		pmpro_ccbill_Exit();
+		
 	break;
 
-	case 'Renewal Failure':
-	break;
-
-/*
-	case 'Chargeback':
-	break;
-
-	case 'Return':
-	break;
-
-	case 'Refund':
-	break;
-
-	case 'Void':
-	break;
- *
- */
-
-	
+	default:
+		do_action('pmpro_ccbill_other_webhook_events', $event_type);
+		pmpro_ccbill_Exit();
+		
+	break;	
 }
 
 function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
@@ -150,7 +121,7 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 	if(!empty($pmpro_error))
 	{
 		echo $pmpro_error;
-	//	inslog($pmpro_error);
+		pmpro_ccbill_webhook_log($pmpro_error);
 	}
 	if( pmpro_changeMembershipLevel($custom_level, $morder->user_id) !== false )
 	{
@@ -172,7 +143,6 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 		$morder->expirationmonth = $card_exp_month;
 		$morder->expirationyear = $card_exp_year;
 		
-	
 		$morder->saveOrder();
 		
 		//add discount code use
@@ -185,14 +155,14 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 		{
 			$old_firstname = get_user_meta($morder->user_id, "first_name", true);
 			if(!empty($old_firstname))
-				update_user_meta($morder->user_id, "first_name", $_POST['first_name']);
+				update_user_meta($morder->user_id, "first_name", $_POST['firstName']);
 		}
 		if(!empty($_POST['lastName']))
 		{
 			$old_lastname = get_user_meta($morder->user_id, "last_name", true);
 		
 			if(!empty($old_lastname))
-				update_user_meta($morder->user_id, "last_name", $_POST['last_name']);
+				update_user_meta($morder->user_id, "last_name", $_POST['lastName']);
 		}
 		//hook
 		do_action("pmpro_after_checkout", $morder->user_id);
@@ -201,6 +171,8 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 			$invoice = new MemberOrder($morder->id);
 		else
 			$invoice = NULL;
+		
+		pmpro_ccbill_webhook_log(("CHANGEMEMBERSHIPLEVEL: ORDER: " . var_export($morder, true) . "\n---\n"));
 		
 		$user = get_userdata($morder->user_id);
 		if(empty($user))
@@ -220,7 +192,64 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 	
 }
 
+function pmpro_ccbill_RecurringCancel( $morder )
+{	
+	global $pmpro_error;
 
+	$worked = pmpro_changeMembershipLevel( false, $morder->user->ID , 'inactive');
+	if( $worked === true )
+	{
+		//send an email to the member
+		$myemail = new PMProEmail();
+		$myemail->sendCancelEmail();
+		//send an email to the admin
+		$myemail = new PMProEmail();
+		$myemail->sendCancelAdminEmail( $morder->user, $morder->membership_level->id );
+		
+		pmpro_ccbill_webhook_log("Subscription Cancelled (".$morder->csubscription_transaction_id . ")");			
 
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
-	   
+/*
+	Add message to webhook string
+*/
+function pmpro_ccbill_webhook_log( $s )
+{
+	global $logstr;
+	$logstr .= "\t" . $s . "\n";
+}
+/*
+	Output webhook log and exit;
+*/
+function pmpro_ccbill_Exit($redirect = false)
+{
+	global $logstr;
+	//echo $logstr;
+	$logstr = var_export($_REQUEST, true) . "Logged On: " . date_i18n("m/d/Y H:i:s") . "\n" . $logstr . "\n-------------\n";
+	//log in file or email?
+	if(defined('PMPRO_CCBILL_DEBUG') && PMPRO_CCBILL_DEBUG === "log")
+	{
+		//file
+		$loghandle = fopen(PMPRO_CCBILL_DIR. "/logs/ccbill_webhook.txt", "a+");
+		fwrite($loghandle, $logstr);
+		fclose($loghandle);
+	}
+	elseif(defined('PMPRO_CCBILL_DEBUG'))
+	{
+		//email
+		if(strpos(PMPRO_INS_DEBUG, "@"))
+			$log_email = PMPRO_CCBILL_DEBUG;	//constant defines a specific email address
+		else
+			$log_email = get_option("admin_email");
+		wp_mail($log_email, get_option("blogname") . " CCBill Webhook Log", nl2br($logstr));
+	}
+	if(!empty($redirect))
+		wp_redirect($redirect);
+	exit;
+}

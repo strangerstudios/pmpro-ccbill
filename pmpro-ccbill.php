@@ -4,7 +4,7 @@ Plugin Name: PMPro CCBill
 Plugin URI: 
 Description: PMPro Gateway integration for CCBill (http://www.ccbill.com)
 Version: 0.1
-Author: Great H Master
+Author: greathmaster
 Author URI:
 */
 
