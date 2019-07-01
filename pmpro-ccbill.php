@@ -6,6 +6,7 @@ Description: PMPro Gateway integration for CCBill (http://www.ccbill.com)
 Version: 0.1
 Author: greathmaster
 Author URI:
+Text Domain: pmpro-ccbill
 */
 
 define("PMPRO_CCBILL_DIR", dirname(__FILE__));
@@ -19,3 +20,11 @@ function pmpro_wp_ajax_ccbill_webhook()
 }
 add_action('wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook');
 add_action('wp_ajax_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook');
+
+/**
+ * Load the languages folder for translations.
+ */
+function pmproccbill_load_textdomain(){
+	load_plugin_textdomain( 'pmpro-ccbill' );
+}
+add_action( 'plugins_loaded', 'pmproccbill_load_textdomain' );
