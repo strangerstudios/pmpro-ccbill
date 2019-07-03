@@ -125,11 +125,11 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 	}
 	if( pmpro_changeMembershipLevel($custom_level, $morder->user_id) !== false )
 	{
-		$txn_id = esc_attr( $response['transactionId'] );
-		$sub_id = esc_attr( $response['subscriptionId'] );
-		$card_type = esc_attr( $response['cardType'] );
-		$card_num = esc_attr( $response['last4'] );
-		$card_exp = esc_attr( $response['expDate'] );
+		$txn_id = $response['transactionId'];
+		$sub_id = $response['subscriptionId'];
+		$card_type = $response['cardType'];
+		$card_num = $response['last4'];
+		$card_exp = $response['expDate'];
 		
 		$card_exp_month = substr($card_exp, 0, 2);
 		$card_exp_year = '20'.substr($card_exp, 2);
@@ -155,14 +155,14 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 		{
 			$old_firstname = get_user_meta($morder->user_id, "first_name", true);
 			if(!empty($old_firstname))
-				update_user_meta($morder->user_id, "first_name", esc_attr( $_POST['firstName'] ) );
+				update_user_meta($morder->user_id, "first_name", sanitize_text_field( $_POST['firstName'] ) );
 		}
 		if(!empty($_POST['lastName']))
 		{
 			$old_lastname = get_user_meta($morder->user_id, "last_name", true);
 		
 			if(!empty($old_lastname))
-				update_user_meta($morder->user_id, "last_name", esc_attr( $_POST['lastName'] ) );
+				update_user_meta($morder->user_id, "last_name", sanitize_text_field( $_POST['lastName'] ) );
 		}
 		//hook
 		do_action("pmpro_after_checkout", $morder->user_id);
@@ -231,7 +231,7 @@ function pmpro_ccbill_Exit($redirect = false)
 {
 	global $logstr;
 	//echo $logstr;
-	$logstr = var_export($_REQUEST, true) . __( 'Logged On: ', 'pmpro-ccbill' ) . date_i18n("m/d/Y H:i:s") . "\n" . $logstr . "\n-------------\n";
+	$logstr = var_export($_REQUEST, true) . sprintf( __( 'Logged On: %s', 'pmpro-ccbill' ), date_i18n("m/d/Y H:i:s") ) . "\n" . $logstr . "\n-------------\n";
 	//log in file or email?
 	if(defined('PMPRO_CCBILL_DEBUG') && PMPRO_CCBILL_DEBUG === "log")
 	{
