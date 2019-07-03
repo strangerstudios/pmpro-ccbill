@@ -10,16 +10,24 @@ Text Domain: pmpro-ccbill
 */
 
 define("PMPRO_CCBILL_DIR", dirname(__FILE__));
-//load payment gateway class
-require_once(PMPRO_CCBILL_DIR . "/classes/class.pmprogateway_ccbill.php");
+
+/**
+ * Loads rest of CCBill gateway if PMPro is active.
+ */
+function pmproccbill_load_gateway() {
+	if ( class_exists( 'PMProGateway' ) ) {
+		require_once( PMPRO_CCBILL_DIR . '/classes/class.pmprogateway_ccbill.php' );
+		add_action( 'wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
+		add_action( 'wp_ajax_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
+	}
+}
+add_action( 'plugins_loaded', 'pmproccbill_load_gateway' );
 
 function pmpro_wp_ajax_ccbill_webhook()
 {
 	require_once(dirname(__FILE__) . "/webhook.php");
 	exit;	
 }
-add_action('wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook');
-add_action('wp_ajax_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook');
 
 /**
  * Load the languages folder for translations.
