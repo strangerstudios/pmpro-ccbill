@@ -367,7 +367,7 @@ class PMProGateway_CCBill extends PMProGateway
 		$ccbill_flex_form_id = pmpro_getOption('ccbill_flex_form_id');
 		$ccbill_salt = pmpro_getOption('ccbill_salt');
 
-		$ccbill_flex_forms_url = esc_url( 'https://api.ccbill.com/wap-frontflex/flexforms/' . $ccbill_flex_form_id );
+		$ccbill_flex_forms_url = 'https://api.ccbill.com/wap-frontflex/flexforms/' . $ccbill_flex_form_id;
 
 		$ccbill_args = array();
 		$ccbill_args['clientAccnum'] = $ccbill_account_number;
@@ -447,7 +447,7 @@ class PMProGateway_CCBill extends PMProGateway
 		$ccbill_url = $ccbill_flex_forms_url . $ptpStr;
 
 		//redirect to CCBill
-		wp_redirect( $ccbill_url );
+		wp_redirect( esc_url( $ccbill_url ) );
 		exit;
 	}
 	function cancel(&$order) {
