@@ -52,7 +52,7 @@ class PMProGateway_CCBill extends PMProGateway
 	static function pmpro_gateways($gateways)
 	{
 		if(empty($gateways['ccbill']))
-			$gateways['ccbill'] = __('CCBill', 'paid-memberships-pro' );
+			$gateways['ccbill'] = __('CCBill', 'pmpro-ccbill' );
 
 		return $gateways;
 	}
@@ -109,78 +109,78 @@ class PMProGateway_CCBill extends PMProGateway
 	?>
 	<tr class="pmpro_settings_divider gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<td colspan="2">
-			<?php _e('CCBill Settings', 'paid-memberships-pro' ); ?>
+			<?php esc_html_e('CCBill Settings', 'pmpro-ccbill' ); ?>
 		</td>
 	</tr>
 
 
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label for="ccbill_account_number"><?php _e('Client Account Number', 'paid-memberships-pro' );?>:</label>
+			<label for="ccbill_account_number"><?php esc_html_e('Client Account Number', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
 			<input type="text" id="ccbill_account_number" name="ccbill_account_number" size="60" value="<?php echo esc_attr($values['ccbill_account_number'])?>" />
-			<br /><small><?php _e('Enter the client account number from CCBill');?></small>
+			<br /><small><?php esc_html_e('Enter the client account number from CCBill', 'pmpro-ccbill');?></small>
 		</td>
 	</tr>
 
 
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label for="ccbill_subaccount_number"><?php _e('Client SubAccount Number', 'paid-memberships-pro' );?>:</label>
+			<label for="ccbill_subaccount_number"><?php esc_html_e('Client SubAccount Number', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
 			<input type="text" id="ccbill_subaccount_number" name="ccbill_subaccount_number" size="60" value="<?php echo esc_attr($values['ccbill_subaccount_number'])?>" />
-			<br /><small><?php _e('SubAccount Number You will be using');?></small>
+			<br /><small><?php esc_html_e('SubAccount Number You will be using', 'pmpro-ccbill');?></small>
 		</td>
 	</tr>
 
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label for="ccbill_datalink_username"><?php _e('Datalink Username', 'paid-memberships-pro' );?>:</label>
+			<label for="ccbill_datalink_username"><?php esc_html_e('Datalink Username', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
 			<input type="text" id="ccbill_datalink_username" name="ccbill_datalink_username" size="60" value="<?php echo esc_attr($values['ccbill_datalink_username'])?>" />
-			<br /><small><?php _e('Datalink username. This is different than your login username. Contact CCBill for more information.');?></small>
+			<br /><small><?php esc_html_e('Datalink username. This is different than your login username. Contact CCBill for more information.', 'pmpro-ccbill');?></small>
 		</td>
 	</tr>
 
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label for="ccbill_datalink_password"><?php _e('Datalink Password', 'paid-memberships-pro' );?>:</label>
+			<label for="ccbill_datalink_password"><?php esc_html_e('Datalink Password', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
 			<input type="text" id="ccbill_datalink_password" name="ccbill_datalink_password" size="60" value="<?php echo esc_attr($values['ccbill_datalink_password'])?>" />
-			<br /><small><?php _e('Datalink pasword. This is different than your login password. Contact CCBill for more information.');?></small>
+			<br /><small><?php esc_html_e('Datalink pasword. This is different than your login password. Contact CCBill for more information.', 'pmpro-ccbill');?></small>
 		</td>
 	</tr>
 
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label for="ccbill_flex_form_id"><?php _e('Flex Form ID', 'paid-memberships-pro' );?>:</label>
+			<label for="ccbill_flex_form_id"><?php esc_html_e('Flex Form ID', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
-			<input type="text" name="ccbill_flex_form_id" size="60" value="<?php echo $values['ccbill_flex_form_id']?>" />
-			<br /><small><?php _e('Enter the Flex Form ID from CCBill you will be using. Note you may need to have CCBill enable Dynamic Pricing');?></small>
+			<input type="text" name="ccbill_flex_form_id" size="60" value="<?php echo esc_attr( $values['ccbill_flex_form_id'] )?>" />
+			<br /><small><?php esc_html_e('Enter the Flex Form ID from CCBill you will be using. Note you may need to have CCBill enable Dynamic Pricing', 'pmpro-ccbill');?></small>
 		</td>
 	</tr>
 
 
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label for="ccbill_salt"><?php _e('Salt', 'paid-memberships-pro' );?>:</label>
+			<label for="ccbill_salt"><?php esc_html_e('Salt', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
-			<input type="text" name="ccbill_salt" size="60" value="<?php echo $values['ccbill_salt']?>" />
-			<br /><small><?php _e('Salt value must be provided by CCBill');?></small>
+			<input type="text" name="ccbill_salt" size="60" value="<?php echo esc_attr( $values['ccbill_salt'] )?>" />
+			<br /><small><?php esc_html_e('Salt value must be provided by CCBill', 'pmpro-ccbill');?></small>
 		</td>
 	</tr>
 	<tr class="gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<th scope="row" valign="top">
-			<label><?php _e('CCBill Webhook URL', 'paid-memberships-pro' );?>:</label>
+			<label><?php esc_html_e('CCBill Webhook URL', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
-			<p><?php _e('To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'paid-memberships-pro' );?> <pre><?php echo admin_url("admin-ajax.php") . "?action=ccbill-webhook";?></pre></p>
+			<p><?php esc_html_e('To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' );?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook") ;?></pre></p>
 
 		</td>
 	</tr>		
@@ -225,7 +225,7 @@ class PMProGateway_CCBill extends PMProGateway
 		?>			
 		<span id="pmpro_submit_span">
 			<input type="hidden" name="submit-checkout" value="1" />		
-			<input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if($pmpro_requirebilling) { _e('Check Out with CCBill', 'paid-memberships-pro' ); } else { _e('Submit and Confirm', 'paid-memberships-pro' );}?> &raquo;" />
+			<input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if($pmpro_requirebilling) { esc_html_e('Check Out with CCBill', 'pmpro-ccbill' ); } else { esc_html_e('Submit and Confirm', 'pmpro-ccbill' );}?> &raquo;" />
 		</span>
 		<?php
 
@@ -367,7 +367,7 @@ class PMProGateway_CCBill extends PMProGateway
 		$ccbill_flex_form_id = pmpro_getOption('ccbill_flex_form_id');
 		$ccbill_salt = pmpro_getOption('ccbill_salt');
 
-		$ccbill_flex_forms_url = 'https://api.ccbill.com/wap-frontflex/flexforms/'.$ccbill_flex_form_id;
+		$ccbill_flex_forms_url = 'https://api.ccbill.com/wap-frontflex/flexforms/' . $ccbill_flex_form_id;
 
 		$ccbill_args = array();
 		$ccbill_args['clientAccnum'] = $ccbill_account_number;
@@ -447,7 +447,7 @@ class PMProGateway_CCBill extends PMProGateway
 		$ccbill_url = $ccbill_flex_forms_url . $ptpStr;
 
 		//redirect to CCBill
-		wp_redirect( $ccbill_url );
+		wp_redirect( esc_url( $ccbill_url ) );
 		exit;
 	}
 	function cancel(&$order) {
@@ -482,30 +482,29 @@ class PMProGateway_CCBill extends PMProGateway
 	{
 
 		//return new WP_Error( $response_code, $response_message );
-
-		$cancel_error = "Cancellation of subscription id: ". $order->subscription_transaction_id." may have failed. Check CCBill Admin to confirm cancellation";
+		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
 		$email = get_option("admin_email");
-		wp_mail($email, get_option("blogname") . " CCBill Subscription Cancel Error", $cancel_error);
+		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 
 	}
 
 	elseif ( 200 != $response_code )
 	{
 		//Unknown Error Occurred
-		$cancel_error = "Cancellation of subscription id: ". $order->subscription_transaction_id." may have failed. Check CCBill Admin to confirm cancellation";
+		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
 		$email = get_option("admin_email");
-		wp_mail($email, get_option("blogname") . " CCBill Subscription Cancel Error", $cancel_error);
+		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 
 	}
 	elseif( $cancel_status < 1)
 	{
 		//A CCBill Error has occured. They need to contact CCBill
-		$cancel_error = "Cancellation of subscription id: ". $order->subscription_transaction_id." may have failed. Check CCBill Admin to confirm cancellation";
+		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
 		$email = get_option("admin_email");
-		wp_mail($email, get_option("blogname") . " CCBill Subscription Cancel Error", $cancel_error);
+		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 	}
 
 	else 
