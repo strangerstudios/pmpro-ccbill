@@ -165,7 +165,7 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 				update_user_meta($morder->user_id, "last_name", sanitize_text_field( $_POST['lastName'] ) );
 		}
 		//hook
-		do_action("pmpro_after_checkout", $morder->user_id);
+		do_action("pmpro_after_checkout", $morder->user_id, $morder );
 		//setup some values for the emails
 		if(!empty($morder))
 			$invoice = new MemberOrder($morder->id);
