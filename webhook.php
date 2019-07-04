@@ -243,7 +243,7 @@ function pmpro_ccbill_Exit($redirect = false)
 	elseif(defined('PMPRO_CCBILL_DEBUG'))
 	{
 		//email
-		if(strpos(PMPRO_INS_DEBUG, "@"))
+		if(strpos(PMPRO_CCBILL_DEBUG, "@"))
 			$log_email = PMPRO_CCBILL_DEBUG;	//constant defines a specific email address
 		else
 			$log_email = get_option("admin_email");
