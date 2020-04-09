@@ -437,19 +437,13 @@ class PMProGateway_CCBill extends PMProGateway
 		$ccbill_args['country'] = $bcountry;
 		$ccbill_args['phone_number'] = $bphone;
 
-		$ptpStr = '';
-		foreach( $ccbill_args as $key => $value )
-		{
-			reset( $ccbill_args); 
-			$ptpStr .= ( $key == key($ccbill_args) ) ? '?' . $key . '=' . urlencode( $value ) : '&' . $key . '=' . urlencode( $value );
-		}
-
-		$ccbill_url = $ccbill_flex_forms_url . $ptpStr;
+		$ccbill_url	= add_query_arg( $ccbill_args, $ccbill_flex_forms_url );
 
 		//redirect to CCBill
-		wp_redirect( esc_url( $ccbill_url ) );
+		wp_redirect( $ccbill_url  );
 		exit;
 	}
+	
 	function cancel(&$order) {
 
 	//no matter what happens below, we're going to cancel the order in our system
