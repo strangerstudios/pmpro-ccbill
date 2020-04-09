@@ -440,7 +440,8 @@ class PMProGateway_CCBill extends PMProGateway
 		$ccbill_url	= add_query_arg( $ccbill_args, $ccbill_flex_forms_url );
 
 		//redirect to CCBill
-		wp_redirect( $ccbill_url  );
+		wp_redirect( $ccbill_url );
+
 		exit;
 	}
 	

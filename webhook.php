@@ -165,7 +165,7 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 				update_user_meta($morder->user_id, "last_name", sanitize_text_field( $_POST['lastName'] ) );
 		}
 		//hook
-		do_action("pmpro_after_checkout", $morder->user_id);
+		do_action("pmpro_after_checkout", $morder->user_id, $morder );
 		//setup some values for the emails
 		if(!empty($morder))
 			$invoice = new MemberOrder($morder->id);
@@ -243,7 +243,7 @@ function pmpro_ccbill_Exit($redirect = false)
 	elseif(defined('PMPRO_CCBILL_DEBUG'))
 	{
 		//email
-		if(strpos(PMPRO_INS_DEBUG, "@"))
+		if(strpos(PMPRO_CCBILL_DEBUG, "@"))
 			$log_email = PMPRO_CCBILL_DEBUG;	//constant defines a specific email address
 		else
 			$log_email = get_option("admin_email");
