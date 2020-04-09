@@ -7,6 +7,10 @@ global $wpdb, $gateway_environment, $logstr;
 
 $logstr = ''; //will put debug info here and write to ccbill_webhook_log.txt
 
+if( !function_exists( 'pmpro_getParam' ) ){
+	return;
+}
+
 $event_type = pmpro_getParam('eventType', 'REQUEST');
 
 $response = array();
