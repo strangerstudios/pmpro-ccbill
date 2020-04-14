@@ -105,12 +105,16 @@ class PMProGateway_CCBill extends PMProGateway
 	 */
 	static function pmpro_is_ccbill_ready( $ready ){
 
-		$ready = ( pmpro_getOption('ccbill_account_number') == "" ) ? true : false;
-		$ready = ( pmpro_getOption('ccbill_subaccount_number') == "" ) ? true : false;
-		$ready = ( pmpro_getOption('ccbill_flex_form_id') == "" ) ? true : false;
-		$ready = ( pmpro_getOption('ccbill_salt') == "" ) ? true : false;
-		$ready = ( pmpro_getOption('ccbill_datalink_username') == "" ) ? true : false;
-		$ready = ( pmpro_getOption('ccbill_datalink_password') == "" ) ? true : false;
+		if( pmpro_getOption('ccbill_account_number') == "" ||
+		pmpro_getOption('ccbill_subaccount_number') == "" ||
+		pmpro_getOption('ccbill_flex_form_id') == "" ||
+		pmpro_getOption('ccbill_salt') == "" ||
+		pmpro_getOption('ccbill_datalink_username') == "" ||
+		pmpro_getOption('ccbill_datalink_password') == "" ){
+			$ready = false;
+		} else {
+			$ready = true;
+		}
 
 		return $ready;
 
