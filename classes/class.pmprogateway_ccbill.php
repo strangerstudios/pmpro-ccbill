@@ -29,7 +29,6 @@ class PMProGateway_CCBill extends PMProGateway
 		$gateway = pmpro_getGateway();
 		if($gateway == "ccbill")
 		{				
-			add_filter('pmpro_include_billing_address_fields', '__return_false');
 			add_filter('pmpro_include_payment_information_fields', '__return_false');
 			add_filter('pmpro_required_billing_fields', array('PMProGateway_CCBill', 'pmpro_required_billing_fields'));
 			add_filter('pmpro_checkout_default_submit_button', array('PMProGateway_CCBill', 'pmpro_checkout_default_submit_button'));
@@ -194,15 +193,6 @@ class PMProGateway_CCBill extends PMProGateway
 	 */
 	static function pmpro_required_billing_fields($fields)
 	{
-		unset($fields['bfirstname']);
-		unset($fields['blastname']);
-		unset($fields['baddress1']);
-		unset($fields['bcity']);
-		unset($fields['bstate']);
-		unset($fields['bzipcode']);
-		unset($fields['bphone']);
-		unset($fields['bemail']);
-		unset($fields['bcountry']);
 		unset($fields['CardType']);
 		unset($fields['AccountNumber']);
 		unset($fields['ExpirationMonth']);
