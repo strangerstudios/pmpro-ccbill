@@ -141,7 +141,9 @@ function pmpro_ccbill_ChangeMembershipLevel($response, $morder)
 		//update order status and transaction ids
 		$morder->status = "success";
 		$morder->payment_transaction_id = $txn_id;
-		$morder->subscription_transaction_id = $sub_id;
+		if( intval( $response['recurringPeriod'] ) !== 0 ){
+			$morder->subscription_transaction_id = $sub_id;
+		}
 		$morder->cardtype = $card_type;
 		$morder->accountnumber = 'XXXXXXXXXXXX'.$card_num;
 		$morder->expirationmonth = $card_exp_month;
