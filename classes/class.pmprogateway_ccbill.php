@@ -506,8 +506,9 @@ class PMProGateway_CCBill extends PMProGateway
 	}
 	elseif( $cancel_status < 1)
 	{
+		$error_code = $this->pmprocb_return_api_response( $cancel_status );
 		//A CCBill Error has occured. They need to contact CCBill
-		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
+		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $order->subscription_transaction_id, $error_code );
 
 		$email = get_option("admin_email");
 		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
@@ -519,5 +520,33 @@ class PMProGateway_CCBill extends PMProGateway
 	}
 
 	return $order;
+	}
+
+	function pmprocb_return_api_response( $code )
+	{
+		$error_codes = array(
+			"0" => __("The requested action failed.", "pmpro-ccbill" ),
+			"-1" => __("The arguments provided to authenticate the merchant were invalid or missing.", "pmpro-ccbill"),
+			"-2" => __("The subscription id provided was invalid or the subscription type is not supported by the requested action.", "pmpro-ccbill"),
+			"-3" => __("No record was found for the given subscription.", "pmpro-ccbill"),
+			"-4" => __("The given subscription was not for the account the merchant was authenticated on.", "pmpro-ccbill"),
+			"-5" => __("The arguments provided for the requested action were invalid or missing.", "pmpro-ccbill"),
+			"-6" => __("The requested action was invalid", "pmpro-ccbill"),
+			"-7" => __("There was an internal error or a database error and the requested action could not complete.", "pmpro-ccbill"),
+			"-8" => __("The IP Address the merchant was attempting to authenticate on was not in the valid range.", "pmpro-ccbill"),
+			"-9" => __("The merchant’s account has been deactivated for use on the Datalink system or the merchant is not permitted to perform the requested action", "pmpro-ccbill"),
+			"-10" => __("The merchant has not been set up to use the Datalink system.", "pmpro-ccbill"),
+			"-11" => __("Subscription is not eligible for a discount, recurring price less than $5.00.", "pmpro-ccbill"),
+			"-12" => __("The merchant has unsuccessfully logged into the system 3 or more times in the last hour. The merchant should wait an hour before attempting to login again and is advised to review the login information.", "pmpro-ccbill"),
+			"-15" => __("Merchant over refund threshold", "pmpro-ccbill"),
+			"-16" => __("Merchant over void threshold", "pmpro-ccbill"),
+			"-23" => __("Transaction limit reached", "pmpro-ccbill"),
+			"-24" => __("Purchase limit reached", "pmpro-ccbill")
+		);
+
+		if( isset( $error_codes[$code] ) ){
+			return $error_codes[$code];
+		}
+		return __("Error Code Unknown", "pmpro-ccbill");
 	}
 }
