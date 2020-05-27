@@ -1,5 +1,5 @@
 <?php
-	
+
 //load classes init method
 add_action('init', array('PMProGateway_CCBill', 'init'));
 
@@ -9,26 +9,26 @@ class PMProGateway_CCBill extends PMProGateway
 	{
 		$this->gateway = $gateway;
 		return $this->gateway;
-	}										
+	}
 
 	/**
 	 * Run on WP init
-	 *		 
+	 *
 	 * @since 1.8
 	 */
 	static function init()
-	{			
+	{
 		//make sure CCBill is a gateway option
 		add_filter('pmpro_gateways', array('PMProGateway_CCBill', 'pmpro_gateways'));
 		add_filter('pmpro_gateways_with_pending_status', array('PMProGateway_CCBill', 'pmpro_gateways_with_pending_status'));
 
 		//add fields to payment settings
-		add_filter('pmpro_payment_options', array('PMProGateway_CCBill', 'pmpro_payment_options'));		
+		add_filter('pmpro_payment_options', array('PMProGateway_CCBill', 'pmpro_payment_options'));
 		add_filter('pmpro_payment_option_fields', array('PMProGateway_CCBill', 'pmpro_payment_option_fields'), 10, 2);
 		//code to add at checkout
 		$gateway = pmpro_getGateway();
 		if($gateway == "ccbill")
-		{				
+		{
 			add_filter('pmpro_include_billing_address_fields', '__return_false');
 			add_filter('pmpro_include_payment_information_fields', '__return_false');
 			add_filter('pmpro_required_billing_fields', array('PMProGateway_CCBill', 'pmpro_required_billing_fields'));
@@ -40,13 +40,13 @@ class PMProGateway_CCBill extends PMProGateway
 	static function pmpro_gateways_with_pending_status($gateways)
 	{
 		$gateways[] = 'ccbill';
-		return $gateways;	
+		return $gateways;
 	}
 
 
 	/**
 	 * Make sure this gateway is in the gateways list
-	 *		 
+	 *
 	 * @since 1.8
 	 */
 	static function pmpro_gateways($gateways)
@@ -59,11 +59,11 @@ class PMProGateway_CCBill extends PMProGateway
 
 	/**
 	 * Get a list of payment options that the this gateway needs/supports.
-	 *		 
+	 *
 	 * @since 1.8
 	 */
 	static function getGatewayOptions()
-	{			
+	{
 		$options = array(
 			'sslseal',
 			'nuclear_HTTPS',
@@ -85,11 +85,11 @@ class PMProGateway_CCBill extends PMProGateway
 
 	/**
 	 * Set payment options for payment settings page.
-	 *		 
+	 *
 	 * @since 1.8
 	 */
 	static function pmpro_payment_options($options)
-	{			
+	{
 		//get ccbill options
 		$ccbill_options = PMProGateway_CCBill::getGatewayOptions();
 
@@ -101,7 +101,7 @@ class PMProGateway_CCBill extends PMProGateway
 
 	/**
 	 * Display fields for this gateway's options.
-	 *		 
+	 *
 	 * @since 1.8
 	 */
 	static function pmpro_payment_option_fields($values, $gateway)
@@ -183,13 +183,13 @@ class PMProGateway_CCBill extends PMProGateway
 			<p><?php _e('To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'paid-memberships-pro' );?> <pre><?php echo admin_url("admin-ajax.php") . "?action=ccbill-webhook";?></pre></p>
 
 		</td>
-	</tr>		
+	</tr>
 	<?php
 	}
 
 	/**
 	 * Remove required billing fields
-	 *		 
+	 *
 	 * @since 1.8
 	 */
 	static function pmpro_required_billing_fields($fields)
@@ -222,9 +222,9 @@ class PMProGateway_CCBill extends PMProGateway
 		global $gateway, $pmpro_requirebilling;
 
 		//show our submit buttons
-		?>			
+		?>
 		<span id="pmpro_submit_span">
-			<input type="hidden" name="submit-checkout" value="1" />		
+			<input type="hidden" name="submit-checkout" value="1" />
 			<input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if($pmpro_requirebilling) { _e('Check Out with CCBill', 'paid-memberships-pro' ); } else { _e('Submit and Confirm', 'paid-memberships-pro' );}?> &raquo;" />
 		</span>
 		<?php
@@ -236,7 +236,7 @@ class PMProGateway_CCBill extends PMProGateway
 	/**
 	 * Instead of change membership levels, send users to CCBill to pay.
 	 *
-	 * 
+	 *
 	 */
 	static function pmpro_checkout_before_change_membership_level($user_id, $morder)
 	{
@@ -246,12 +246,12 @@ class PMProGateway_CCBill extends PMProGateway
 		if(empty($morder))
 			return;
 
-		$morder->user_id = $user_id;				
+		$morder->user_id = $user_id;
 		$morder->saveOrder();
 
 		//save discount code use
 		if(!empty($discount_code_id))
-			$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . $discount_code_id . "', '" . $user_id . "', '" . $morder->id . "', now())");	
+			$wpdb->query("INSERT INTO $wpdb->pmpro_discount_codes_uses (code_id, user_id, order_id, timestamp) VALUES('" . $discount_code_id . "', '" . $user_id . "', '" . $morder->id . "', now())");
 
 		do_action("pmpro_before_send_to_ccbill", $user_id, $morder);
 
@@ -262,7 +262,7 @@ class PMProGateway_CCBill extends PMProGateway
 	function pmpro_get_digest($initial_price, $initial_period, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $salt)
 	{
 		$initial_price = number_format($initial_price , 2, ".","");
-		$stringToHash = '' 
+		$stringToHash = ''
 				 . $initial_price
 				 . $initial_period
 				 .(!empty($recurring_price) ? number_format($recurring_price, 2, '.', '') : '')
@@ -281,12 +281,12 @@ class PMProGateway_CCBill extends PMProGateway
 
 	/**
 	 * Process checkout.
-	 *		
+	 *
 	 */
 	function process(&$order)
-	{						
+	{
 		if(empty($order->code))
-			$order->code = $order->getRandomCode();			
+			$order->code = $order->getRandomCode();
 
 		//clean up a couple values
 		$order->payment_type = "CCBill";
@@ -294,7 +294,7 @@ class PMProGateway_CCBill extends PMProGateway
 		$order->cardtype = "";
 
 		//just save, the user will go to CCBill to pay
-		$order->status = "pending";														
+		$order->status = "pending";
 		$order->saveOrder();
 		return true;
 	}
@@ -335,11 +335,11 @@ class PMProGateway_CCBill extends PMProGateway
 				break;
 		}
 
-		return $currency_code;	
+		return $currency_code;
 	}
 
 	function sendToCCBill(&$order)
-	{				
+	{
 		//These are CCBill username and password not ours
 
 		//$username = pmpro_getParam('username', 'REQUEST');
@@ -377,11 +377,10 @@ class PMProGateway_CCBill extends PMProGateway
 		//taxes on initial amount
 		$initial_payment = $order->InitialPayment;
 		$initial_payment_tax = $order->getTaxForPrice($initial_payment);
-		$initial_payment = round((float)$initial_payment + (float)$initial_payment_tax, 2);	
+		$initial_payment = pmpro_round_price( (float)$initial_payment + (float)$initial_payment_tax );
 
-		// Recurring membership			
-		if( pmpro_isLevelRecurring( $order->membership_level ) )
-		{	
+		// Recurring membership
+		if( pmpro_isLevelRecurring( $order->membership_level ) ) {
 			$recurring_price = number_format($order->membership_level->billing_amount, 2, ".", "");
 
 			$recurring_period = '';
@@ -399,7 +398,7 @@ class PMProGateway_CCBill extends PMProGateway
 			elseif($order->BillingPeriod == "Year")
 				$recurring_period = 365*$order->membership_level->cycle_number;
 
-			$number_of_rebills = '';	
+			$number_of_rebills = '';
 
 			if(!empty($order->membership_level->billing_limit))
 				$number_of_rebills = $order->membership_level->billing_limit;
@@ -421,7 +420,7 @@ class PMProGateway_CCBill extends PMProGateway
 		else
 		{	// Non-recurring membership
 			$ccbill_args['initialPrice'] = number_format($initial_payment, 2, ".", "");
-			$ccbill_args['initialPeriod'] = 2; //2 is the lowest number you can set, and initialPeriod must be set for non-recurring transactions 
+			$ccbill_args['initialPeriod'] = 2; //2 is the lowest number you can set, and initialPeriod must be set for non-recurring transactions
 			$ccbill_args['formDigest'] = $this->pmpro_get_digest($initial_payment, 2, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $ccbill_salt);
 			$ccbill_args['pmpro_orderid'] = $order->id;
 			$ccbill_args['email'] = $bemail;
@@ -440,7 +439,7 @@ class PMProGateway_CCBill extends PMProGateway
 		$ptpStr = '';
 		foreach( $ccbill_args as $key => $value )
 		{
-			reset( $ccbill_args); 
+			reset( $ccbill_args);
 			$ptpStr .= ( $key == key($ccbill_args) ) ? '?' . $key . '=' . urlencode( $value ) : '&' . $key . '=' . urlencode( $value );
 		}
 
@@ -473,13 +472,12 @@ class PMProGateway_CCBill extends PMProGateway
 	$response		= wp_remote_get($cancel_link);
 
 	$response_code		= wp_remote_retrieve_response_code( $response );
-	$response_message	= wp_remote_retrieve_response_message( $response );		
+	$response_message	= wp_remote_retrieve_response_message( $response );
 
 	$response_body		= wp_remote_retrieve_body( $response );
 	$cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
 
-	if (200 != $response_code && !empty($response_message))
-	{
+	if (200 != $response_code && !empty($response_message)) {
 
 		//return new WP_Error( $response_code, $response_message );
 
@@ -488,28 +486,20 @@ class PMProGateway_CCBill extends PMProGateway
 		$email = get_option("admin_email");
 		wp_mail($email, get_option("blogname") . " CCBill Subscription Cancel Error", $cancel_error);
 
-	}
-
-	elseif ( 200 != $response_code )
-	{
+	}	elseif ( 200 != $response_code ) {
 		//Unknown Error Occurred
 		$cancel_error = "Cancellation of subscription id: ". $order->subscription_transaction_id." may have failed. Check CCBill Admin to confirm cancellation";
 
 		$email = get_option("admin_email");
 		wp_mail($email, get_option("blogname") . " CCBill Subscription Cancel Error", $cancel_error);
 
-	}
-	elseif( $cancel_status < 1)
-	{
+	} elseif( $cancel_status < 1) {
 		//A CCBill Error has occured. They need to contact CCBill
 		$cancel_error = "Cancellation of subscription id: ". $order->subscription_transaction_id." may have failed. Check CCBill Admin to confirm cancellation";
 
 		$email = get_option("admin_email");
 		wp_mail($email, get_option("blogname") . " CCBill Subscription Cancel Error", $cancel_error);
-	}
-
-	else 
-	{
+	} else {
 		//success
 	}
 
