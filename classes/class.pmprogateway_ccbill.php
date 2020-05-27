@@ -2,6 +2,7 @@
 	
 //load classes init method
 add_action('init', array('PMProGateway_CCBill', 'init'));
+add_filter('pmpro_is_ready', array( 'PMProGateway_CCBill', 'pmpro_is_ccbill_ready' ), 999, 1 );
 
 class PMProGateway_CCBill extends PMProGateway
 {
@@ -97,6 +98,26 @@ class PMProGateway_CCBill extends PMProGateway
 		$options = array_merge($ccbill_options, $options);
 
 		return $options;
+	}
+
+	/**
+	 * Check if all fields are complete
+	 */
+	static function pmpro_is_ccbill_ready( $ready ){
+
+		if( pmpro_getOption('ccbill_account_number') == "" ||
+		pmpro_getOption('ccbill_subaccount_number') == "" ||
+		pmpro_getOption('ccbill_flex_form_id') == "" ||
+		pmpro_getOption('ccbill_salt') == "" ||
+		pmpro_getOption('ccbill_datalink_username') == "" ||
+		pmpro_getOption('ccbill_datalink_password') == "" ){
+			$ready = false;
+		} else {
+			$ready = true;
+		}
+
+		return $ready;
+
 	}
 
 	/**
