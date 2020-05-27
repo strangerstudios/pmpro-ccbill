@@ -13,21 +13,16 @@ Domain Path: /languages
 define("PMPRO_CCBILL_DIR", dirname(__FILE__));
 
 /**
- * load payment gateway class after all plugins are loaded
- * to make sure PMPro stuff is available.
+ * Loads rest of CCBill gateway if PMPro is active.
  */
-function pmpro_ccbill_plugins_loaded() {
-
-	load_plugin_textdomain( 'pmpro-ccbill', false, basename( __DIR__ ) . '/languages' );
-
-	// make sure PMPro is loaded
-	if ( ! defined( 'PMPRO_DIR' ) ) {
-		return;
+function pmpro_ccbill_load_gateway() {
+	if ( class_exists( 'PMProGateway' ) ) {
+		require_once( PMPRO_CCBILL_DIR . '/classes/class.pmprogateway_ccbill.php' );
+		add_action( 'wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
+		add_action( 'wp_ajax_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
 	}
-
-	require_once(PMPRO_CCBILL_DIR . "/classes/class.pmprogateway_ccbill.php");
 }
-add_action( 'plugins_loaded', 'pmpro_ccbill_plugins_loaded' );
+add_action( 'plugins_loaded', 'pmpro_ccbill_load_gateway' );
 
 /**
  * Callback for CCBill Webhook
@@ -40,10 +35,6 @@ add_action( 'wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
 add_action( 'wp_ajax_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
 
 /**
- * Register activation hook.
- */
-register_activation_hook( __FILE__, 'pmpro_ccbill_admin_notice_activation_hook' );
-/**
  * Runs only when the plugin is activated.
  *
  * @since 0.1.0
@@ -52,6 +43,7 @@ function pmpro_ccbill_admin_notice_activation_hook() {
 	// Create transient data.
 	set_transient( 'pmpro-ccbill-admin-notice', true, 5 );
 }
+register_activation_hook( __FILE__, 'pmpro_ccbill_admin_notice_activation_hook' );
 
 /**
  * Admin Notice on Activation.
@@ -103,3 +95,11 @@ function pmpro_ccbill_plugin_row_meta( $links, $file ) {
 	return $links;
 }
 add_filter( 'plugin_row_meta', 'pmpro_ccbill_plugin_row_meta', 10, 2 );
+
+/**
+ * Load the languages folder for translations.
+ */
+function pmproccbill_load_textdomain(){
+	load_plugin_textdomain( 'pmpro-ccbill' );
+}
+add_action( 'plugins_loaded', 'pmproccbill_load_textdomain' );
