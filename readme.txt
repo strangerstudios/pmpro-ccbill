@@ -2,10 +2,10 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, pmpro, ccbill, adult, high risk, gateway, credit card
 Requires at least: 4
-Tested up to: 4.8
+Tested up to: 5.4.1
 Stable tag: .1
 
-Integration to checkout with CCBill.
+Add CCBill as a payment gateway option for Paid Memberships Pro.
 
 == Description ==
 
@@ -33,4 +33,4 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 == Changelog ==
 
 = .1 =
-* Originanl version.
+* Original version.
