@@ -9,6 +9,25 @@ class PMProGateway_CCBill extends PMProGateway
 	function __construct($gateway = NULL)
 	{
 		$this->gateway = $gateway;
+		$this->gateway_environment = pmpro_getOption("gateway_environment");
+
+		$this->id                = 'ccbill';
+  		$this->submit_text = apply_filters( 'pmpro_ccbill_submit_text', __( 'Proceed to Checkout', 'pmpro-ccbill' ) );
+  		$this->liveurl           = 'https://bill.ccbill.com/jpost/signup.cgi';
+  		$this->staging_url       = 'https://bill.ccbill.com/jpost/signup.cgi';
+  		$this->baseurl_flex      = 'https://api.ccbill.com/wap-frontflex/flexforms/';
+  		$this->webhook_url       = esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook" );
+  		$this->priceVarName      = 'formPrice';
+  		$this->periodVarName     = 'formPeriod';
+  		$this->currency_codes    = apply_filters( 'pmpro_ccbill_supported_currency_codes', array(
+									'USD' => 840,
+									'EUR' => 978,
+									'AUD' => 036,
+									'CAD' => 124,
+									'GBP' => 826,
+									'JPY' => 392,
+  								) );
+
 		return $this->gateway;
 	}
 
@@ -126,6 +145,9 @@ class PMProGateway_CCBill extends PMProGateway
 	 */
 	static function pmpro_payment_option_fields($values, $gateway)
 	{
+
+		$ccbill = new PMProGateway_CCBill();
+
 	?>
 	<tr class="pmpro_settings_divider gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<td colspan="2">
@@ -200,7 +222,7 @@ class PMProGateway_CCBill extends PMProGateway
 			<label><?php esc_html_e('CCBill Webhook URL', 'pmpro-ccbill' );?>:</label>
 		</th>
 		<td>
-			<p><?php esc_html_e('To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' );?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook") ;?></pre></p>
+			<p><?php esc_html_e('To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' );?> <pre><?php echo $ccbill->webhook_url; ?></pre></p>
 
 		</td>
 	</tr>
@@ -232,11 +254,13 @@ class PMProGateway_CCBill extends PMProGateway
 	{
 		global $gateway, $pmpro_requirebilling;
 
+		$ccbill = new PMProGateway_CCBill();
+
 		//show our submit buttons
 		?>
 		<span id="pmpro_submit_span">
 			<input type="hidden" name="submit-checkout" value="1" />
-			<input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if($pmpro_requirebilling) { esc_html_e('Check Out with CCBill', 'pmpro-ccbill' ); } else { esc_html_e('Submit and Confirm', 'pmpro-ccbill' );}?> &raquo;" />
+			<input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if($pmpro_requirebilling) { echo $ccbill->submit_text; } else { esc_html_e('Submit and Confirm', 'pmpro-ccbill' );}?> &raquo;" />
 		</span>
 		<?php
 
@@ -272,22 +296,30 @@ class PMProGateway_CCBill extends PMProGateway
 
 	function pmpro_get_digest($initial_price, $initial_period, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $salt)
 	{
-		$initial_price = number_format($initial_price , 2, ".","");
-		$stringToHash = ''
-				 . $initial_price
-				 . $initial_period
-				 .(!empty($recurring_price) ? number_format($recurring_price, 2, '.', '') : '')
-				 . $recurring_period
-				 . $number_of_rebills
-				 . $currency_code /*978 - EUR
-								036 - AUD
-								124 - CAD
-								826 - GBP
-								392 - JPY
-								840 - USD*/
-				 . $salt;
 
-		return md5($stringToHash);
+		 $stringToHash = '' . $initial_price
+  	                     . $initial_period
+  	                     . $currency_code
+  	                     . $salt;
+
+  	  return md5($stringToHash);
+
+		// $initial_price = number_format($initial_price , 2, ".","");
+		// $stringToHash = ''
+		// 		 . $initial_price
+		// 		 . $initial_period
+		// 		 .(!empty($recurring_price) ? number_format($recurring_price, 2, '.', '') : '')
+		// 		 . $recurring_period
+		// 		 . $number_of_rebills
+		// 		 . $currency_code /*978 - EUR
+		// 						036 - AUD
+		// 						124 - CAD
+		// 						826 - GBP
+		// 						392 - JPY
+		// 						840 - USD*/
+		// 		 . $salt;
+
+		// return md5($stringToHash);
 }
 
 	/**
@@ -314,48 +346,28 @@ class PMProGateway_CCBill extends PMProGateway
 	{
 		global $pmpro_currency;
 
+		$ccbill = new PMProGateway_CCBill();
+
 		$currency_code = false;
 
-		if(empty($currency_abbr))
+		if( empty( $currency_abbr ) )
 			$currency_abbr = $pmpro_currency;
 
-		switch($currency_abbr)
-		{
-			case 'EUR':
-				$currency_code = '978';
-				break;
+		$supported_currency_codes = $ccbill->currency_codes;
 
-			case 'AUD':
-				$currency_code = '036';
-				break;
-
-			case 'CAD':
-				$currency_code = '124';
-				break;
-
-			case 'GBP':
-				$currency_code = '826';
-				break;
-
-			case 'JPY':
-				$currency_code = '392';
-				break;
-
-			case 'USD':
-				$currency_code = '840';
-				break;
+		if( !empty( $supported_currency_codes[$pmpro_currency] ) ){
+			return $supported_currency_codes[$pmpro_currency];
 		}
 
-		return $currency_code;
+		//If all else fails, default to USD
+		return 840;
 	}
 
 	function sendToCCBill(&$order)
 	{
-		//These are CCBill username and password not ours
-
-		//$username = pmpro_getParam('username', 'REQUEST');
-		//$password = pmpro_getParam('password', 'REQUEST');
-
+		$ccbill = new PMProGateway_CCBill();
+		
+		//Get checkout data
 		$first_name	= pmpro_getParam('bfirstname', 'REQUEST');
 		$last_name	= pmpro_getParam('blastname', 'REQUEST');
 		$baddress1	= pmpro_getParam('baddress1', 'REQUEST');
@@ -372,18 +384,28 @@ class PMProGateway_CCBill extends PMProGateway
 		$currency_code = $this->get_currency_code();
 
 		//get the options
-
 		$ccbill_account_number = pmpro_getOption('ccbill_account_number');
 		$ccbill_subaccount_number = pmpro_getOption('ccbill_subaccount_number');
 		$ccbill_flex_form_id = pmpro_getOption('ccbill_flex_form_id');
 		$ccbill_salt = pmpro_getOption('ccbill_salt');
 
-		$ccbill_flex_forms_url = 'https://api.ccbill.com/wap-frontflex/flexforms/' . $ccbill_flex_form_id;
-
-		$ccbill_args = array();
-		$ccbill_args['clientAccnum'] = $ccbill_account_number;
-		$ccbill_args['clientSubacc'] = $ccbill_subaccount_number;
-		$ccbill_args['currencyCode'] = $currency_code;
+		$ccbill_api_url = ( $ccbill->gateway_environment == 'live' ) ? $this->liveurl : $this->staging_url;
+		
+		$ccbill_args = array(
+			'clientAccnum' => $ccbill_account_number,
+			'clientSubacc' => $ccbill_subaccount_number,
+			'formName' => '211cc',
+			'currencyCode' => $currency_code,
+			'customer_fname' => $first_name,
+			'customer_lname' => $last_name,
+			'email' => $bemail,
+			'zipcode' => $bzipcode,
+			'country' => $bcountry,
+			'city' => $bcity,
+			'state' => $bstate,
+			'address1' => $baddress1. " ".$baddress2,
+		);
+	
 
 		//taxes on initial amount
 		$initial_payment = $order->InitialPayment;
@@ -423,31 +445,22 @@ class PMProGateway_CCBill extends PMProGateway
 
 			//technically, the initial period can be different than the recurring period, but keep it consistant with the other integrations.
 			$ccbill_args['initialPeriod'] = $recurring_period;
-			$ccbill_args['formDigest'] = $this->pmpro_get_digest($initial_payment, $recurring_period, $recurring_price, $recurring_period, $number_of_rebills, $currency_code, $ccbill_salt);
+			// $ccbill_args['formDigest'] = $ccbill->pmpro_get_digest($initial_payment, $recurring_period, $recurring_price, $recurring_period, $number_of_rebills, $currency_code, $ccbill_salt);
 			$ccbill_args['pmpro_orderid'] = $order->id;
-			$ccbill_args['email'] = $bemail;
+			// $ccbill_args['email'] = $bemail;
 		}
 
 		else
 		{	// Non-recurring membership
-			$ccbill_args['initialPrice'] = number_format($initial_payment, 2, ".", "");
-			$ccbill_args['initialPeriod'] = 2; //2 is the lowest number you can set, and initialPeriod must be set for non-recurring transactions
-			$ccbill_args['formDigest'] = $this->pmpro_get_digest($initial_payment, 2, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $ccbill_salt);
+			// $ccbill_args['initialPrice'] = number_format($initial_payment, 2, ".", "");
+			// $ccbill_args['initialPeriod'] = 1; //2 is the lowest number you can set, and initialPeriod must be set for non-recurring transactions
+			// $ccbill_args['formDigest'] = $ccbill->pmpro_get_digest($initial_payment, 2, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $ccbill_salt);
 			$ccbill_args['pmpro_orderid'] = $order->id;
-			$ccbill_args['email'] = $bemail;
 		}
+		//need to dynamically get a list of 'product ids' from CCBill
+		$ccbill_args['subscriptionTypeId'] = '0000006683:840';
 
-		//If we have these set, pass them to CCBill
-		$ccbill_args['customer_fname'] = $first_name;
-		$ccbill_args['customer_lname'] = $last_name;
-		$ccbill_args['address1'] = $baddress1. " ".$baddress2; //only one line in CCBill for Address
-		$ccbill_args['city'] = $bcity;
-		$ccbill_args['state'] =$bstate;
-		$ccbill_args['zipcode'] =$bzipcode;
-		$ccbill_args['country'] = $bcountry;
-		$ccbill_args['phone_number'] = $bphone;
-
-		$ccbill_url	= add_query_arg( $ccbill_args, $ccbill_flex_forms_url );
+		$ccbill_url	= add_query_arg( $ccbill_args, $ccbill_api_url );
 
 		//redirect to CCBill
 		wp_redirect( $ccbill_url );
