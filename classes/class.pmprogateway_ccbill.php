@@ -457,60 +457,61 @@ class PMProGateway_CCBill extends PMProGateway
 
 	function cancel(&$order) {
 
-	//no matter what happens below, we're going to cancel the order in our system
-	$order->updateStatus("cancelled");
-	//require a payment transaction id
-	if(empty($order->subscription_transaction_id))
-		return false;
+		//no matter what happens below, we're going to cancel the order in our system
+		$order->updateStatus("cancelled");
+		//require a payment transaction id
+		if(empty($order->subscription_transaction_id))
+			return false;
 
-	//build the URL
-	$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi?";
+		//build the URL
+		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi?";
 
-	$qargs = array();
-	$qargs["action"]		= "cancelSubscription";
-	$qargs["clientSubacc"]	= pmpro_getOption('ccbill_subaccount_number');
-	$qargs["subscriptionId"] = $order->subscription_transaction_id;
-	$qargs["clientAccnum"]	= pmpro_getOption('ccbill_account_number');
-	$qargs["username"]		= pmpro_getOption('ccbill_datalink_username'); //must be provided by CCBill
-	$qargs["password"]		= pmpro_getOption('ccbill_datalink_password'); //must be provided by CCBill
+		$qargs = array();
+		$qargs["action"]		= "cancelSubscription";
+		$qargs["clientSubacc"]	= pmpro_getOption('ccbill_subaccount_number');
+		$qargs["subscriptionId"] = $order->subscription_transaction_id;
+		$qargs["clientAccnum"]	= pmpro_getOption('ccbill_account_number');
+		$qargs["username"]		= pmpro_getOption('ccbill_datalink_username'); //must be provided by CCBill
+		$qargs["password"]		= pmpro_getOption('ccbill_datalink_password'); //must be provided by CCBill
 
-	$cancel_link	= add_query_arg($qargs, $sms_link);
-	$response		= wp_remote_get($cancel_link);
+		$cancel_link	= add_query_arg($qargs, $sms_link);
+		$response		= wp_remote_get($cancel_link);
 
-	$response_code		= wp_remote_retrieve_response_code( $response );
-	$response_message	= wp_remote_retrieve_response_message( $response );
+		$response_code		= wp_remote_retrieve_response_code( $response );
+		$response_message	= wp_remote_retrieve_response_message( $response );
 
-	$response_body		= wp_remote_retrieve_body( $response );
-	$cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
+		$response_body		= wp_remote_retrieve_body( $response );
+		$cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
 
-	if (200 != $response_code && !empty($response_message)) {
+		if (200 != $response_code && !empty($response_message)) {
 
-		//return new WP_Error( $response_code, $response_message );
-		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
+			//return new WP_Error( $response_code, $response_message );
+			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
-		$email = get_option("admin_email");
-		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
+			$email = get_option("admin_email");
+			wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 
-	}	elseif ( 200 != $response_code ) {
-		//Unknown Error Occurred
-		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
+		}	elseif ( 200 != $response_code ) {
+			//Unknown Error Occurred
+			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
-		$email = get_option("admin_email");
-		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
+			$email = get_option("admin_email");
+			wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 
-	}	elseif( $cancel_status < 1)	{
-		$error_code = $this->pmprocb_return_api_response( $cancel_status );
+		}	elseif( $cancel_status < 1)	{
+			$error_code = $this->pmprocb_return_api_response( $cancel_status );
 
-		//A CCBill Error has occured. They need to contact CCBill
-		$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $order->subscription_transaction_id, $error_code );
+			//A CCBill Error has occured. They need to contact CCBill
+			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $order->subscription_transaction_id, $error_code );
 
-		$email = get_option("admin_email");
-		wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
-	} else {
-		//success
-	}
+			$email = get_option("admin_email");
+			wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
+		} else {
+			//success
+			
+		}
 
-	return $order;
+		return $order;
 	}
 
 	function pmprocb_return_api_response( $code )
