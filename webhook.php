@@ -255,6 +255,16 @@ function pmpro_ccbill_Exit($redirect = false)
 			$log_email = get_option("admin_email");
 		wp_mail($log_email, get_option("blogname") . __( " CCBill Webhook Log", 'pmpro-ccbill' ), nl2br($logstr));
 	}
+
+	if( !empty( $_REQUEST['pmpro_orderid'] ) ){
+		//Coming back from the gateway, lets redirect back to membership confirmation
+		$morder = new MemberOrder( intval( $_REQUEST['pmpro_orderid'] ) );
+		
+		if( !empty( $morder ) ){
+			$redirect = pmpro_url("confirmation", "?level=" . $morder->membership_id);
+		}
+	}
+
 	if(!empty($redirect))
 		wp_redirect($redirect);
 	exit;
