@@ -276,5 +276,6 @@ function pmpro_ccbill_Exit( $redirect = false ) {
 	if ( ! empty( $redirect ) ) {
 		wp_redirect( $redirect );
 	}
+
 	exit;
 }
