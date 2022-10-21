@@ -1,22 +1,29 @@
-=== Paid Memberships Pro - CCBill Gateway Add On ===
+=== Paid Memberships Pro - CCBill Add On ===
 Contributors: strangerstudios
-Tags: paid memberships pro, pmpro, ccbill, adult, high risk, gateway, credit card
-Requires at least: 4
-Tested up to: 5.4.1
-Stable tag: .1
+Tags: paid memberships pro, payment gateway, ccbill
+Requires at least: 4.0
+Tested up to: 5.5.3
+Stable tag: 0.1
 
-Add CCBill as a payment gateway option for Paid Memberships Pro.
+Adds the ability to accept payments using the CCBill Payment Gateway
 
 == Description ==
 
-IMPORTANT NOTE: This plugin is not yet complete.
+Adds CCBill as a payment gateway to your list of accepted payment gateways. CCBill makes use of an off-site payment method process. This Add On is currently in Beta. 
+
+[Read the full documentation for the CCBill Add On](https://www.paidmembershipspro.com/add-ons/ccbill-payment-gateway/)
+
+= Official Paid Memberships Pro Add On =
+
+This is an official Add On for [Paid Memberships Pro](https://www.paidmembershipspro.com), the most complete member management and membership subscriptions plugin for WordPress.
 
 == Installation ==
 
 1. Make sure you have the Paid Memberships Pro plugin installed and activated.
 1. Upload the `pmpro-ccbill` directory to the `/wp-content/plugins/` directory of your site.
 1. Activate the plugin through the 'Plugins' menu in WordPress.
-1. Go to Memberships -> Payment Settings in your WordPress dashboard to complete the CCBill settings.
+
+Navigate to Memberships > Settings > Payment Gateways & SSL and select the CCBill payment gateway. You will then need to fill out the required account credentials to connect your website to the payment gateway.
 
 == Frequently Asked Questions ==
 
@@ -24,13 +31,11 @@ IMPORTANT NOTE: This plugin is not yet complete.
 
 Please post it in the GitHub issue tracker here: https://github.com/strangerstudios/pmpro-ccbill/issues
 
-For immediate help, also post to our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
-
 = I need help installing, configuring, or customizing the plugin. =
 
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
 
-= .1 =
-* Original version.
+= 0.1 - 2022-10-05 =
+* Initial Release
