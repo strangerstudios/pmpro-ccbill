@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Paid Memberships Pro - CCBill Gateway
-Plugin URI:
+Plugin URI: https://paidmembershipspro.com/add-ons/pmpro-ccbill
 Description: PMPro Gateway integration for CCBill
 Version: 0.1
 Author: Paid Memberships Pro
@@ -10,17 +10,19 @@ Text Domain: pmpro-ccbill
 Domain Path: /languages
 */
 
-define("PMPRO_CCBILL_DIR", dirname(__FILE__));
+define( "PMPRO_CCBILL_DIR", dirname( __FILE__ ) );
 
 /**
  * Loads rest of CCBill gateway if PMPro is active.
  */
 function pmpro_ccbill_load_gateway() {
+
 	if ( class_exists( 'PMProGateway' ) ) {
 		require_once( PMPRO_CCBILL_DIR . '/classes/class.pmprogateway_ccbill.php' );
 		add_action( 'wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
 		add_action( 'wp_ajax_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
 	}
+
 }
 add_action( 'plugins_loaded', 'pmpro_ccbill_load_gateway' );
 
@@ -28,7 +30,8 @@ add_action( 'plugins_loaded', 'pmpro_ccbill_load_gateway' );
  * Callback for CCBill Webhook
  */
 function pmpro_wp_ajax_ccbill_webhook() {
-	require_once(dirname(__FILE__) . "/webhook.php");
+
+	require_once( dirname(__FILE__) . "/webhook.php" );
 	exit;
 }
 add_action( 'wp_ajax_nopriv_ccbill-webhook', 'pmpro_wp_ajax_ccbill_webhook' );
@@ -52,9 +55,10 @@ register_activation_hook( __FILE__, 'pmpro_ccbill_admin_notice_activation_hook' 
  */
 function pmpro_ccbill_admin_notice() {
 	// Check transient, if available display notice.
-	if ( get_transient( 'pmpro-ccbill-admin-notice' ) ) { ?>
+	if ( get_transient( 'pmpro-ccbill-admin-notice' ) ) { 
+	?>
 		<div class="updated notice is-dismissible">
-			<p><?php printf( __( 'Thank you for activating. <a href="%s">Visit the payment settings page</a> to configure the CCBill Gateway.', 'pmpro-ccbill' ), esc_url( get_admin_url( null, 'admin.php?page=pmpro-paymentsettings' ) ) ); ?></p>
+			<p><?php printf( __( 'Thank you for activating the Paid Memberships Pro: CCBill Add On. <a href="%s">Visit the payment settings page</a> to configure the CCBill Payment Gateway.', 'pmpro-ccbill' ), esc_url( get_admin_url( null, 'admin.php?page=pmpro-paymentsettings' ) ) ); ?></p>
 		</div>
 		<?php
 		// Delete transient, only display this notice once.
@@ -87,7 +91,7 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'pmpro_ccbill_
 function pmpro_ccbill_plugin_row_meta( $links, $file ) {
 	if ( strpos( $file, 'pmpro-ccbill.php' ) !== false ) {
 		$new_links = array(
-			'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/ccbillt-payment-gateway/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-ccbill' ) ) . '">' . __( 'Docs', 'pmpro-ccbill' ) . '</a>',
+			'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-ccbill/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-ccbill' ) ) . '">' . __( 'Docs', 'pmpro-ccbill' ) . '</a>',
 			'<a href="' . esc_url( 'https://www.paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-ccbill' ) ) . '">' . __( 'Support', 'pmpro-ccbill' ) . '</a>',
 		);
 		$links = array_merge( $links, $new_links );
