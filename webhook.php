@@ -215,7 +215,7 @@ function pmpro_ccbill_RecurringCancel( $morder ) {
 
 	global $pmpro_error;
 
-	$worked = pmpro_changeMembershipLevel( false, $morder->user->ID , 'inactive' );
+	$worked = pmpro_cancelMembershipLevel( $morder->membership_id, $morder->user_id, 'inactive' );
 
 	if ( $worked === true ) {
 		//send an email to the member
