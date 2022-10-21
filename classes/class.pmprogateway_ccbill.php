@@ -129,7 +129,14 @@ class PMProGateway_CCBill extends PMProGateway
 	?>
 	<tr class="pmpro_settings_divider gateway gateway_ccbill" <?php if($gateway != "ccbill") { ?>style="display: none;"<?php } ?>>
 		<td colspan="2">
-			<?php esc_html_e('CCBill Settings', 'pmpro-ccbill' ); ?>
+			<h2><?php esc_html_e('CCBill Settings', 'pmpro-ccbill' ); ?></h2>
+			<div class="notice notice-large notice-warning inline">
+					<p class="pmpro_ccbill_notice">
+						<strong><?php esc_html_e( 'Paid Memberships Pro: CCBill is currently in Beta.', 'pmpro-ccbill' ); ?></strong><br />
+						<?php esc_html_e( 'Include disclaimer about using a Beta Add On for a payment gateway?', 'pmpro-ccbill' ); ?><br />					
+						<a href="NEEDS_LINK" target="_blank"><?php esc_html_e( 'Read the documentation on getting started with Paid Memberships Pro CCBill &raquo;', 'pmpro-ccbill' ); ?></a>
+					</p>
+				</div>
 		</td>
 	</tr>
 
