@@ -156,11 +156,11 @@ function pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) {
 					"INSERT INTO {$wpdb->pmpro_discount_codes_uses} 
 						( code_id, user_id, order_id, timestamp ) 
 						VALUES( %d, %d, %s, %s )",
-					$discount_code_id
-				),
+				$discount_code_id,
 				$morder->user_id,
 				$morder->id,
 				current_time( 'mysql' )
+			);
 		}
 
 		//save first and last name fields
