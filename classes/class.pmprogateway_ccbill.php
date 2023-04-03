@@ -290,8 +290,16 @@ class PMProGateway_CCBill extends PMProGateway {
 	}
 
 
-	function pmpro_get_digest($initial_price, $initial_period, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $salt ) {
+	function pmpro_get_digest($initial_price, $initial_period, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code = null, $salt = null ) {
 
+		// Defaults.
+		if( empty( $currency_code ) ) {
+			$currency_code = PMProGateway_CCBill::get_currency_code();
+		}
+		if( empty( $salt ) ) {
+			$currency_code = pmpro_getOption('ccbill_salt');
+		}
+		
 		$initial_price = number_format($initial_price , 2, ".","");
 		
 		$stringToHash = ''

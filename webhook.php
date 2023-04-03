@@ -16,7 +16,7 @@ $event_type = pmpro_getParam('eventType', 'REQUEST');
 $response = array();
 
 foreach( $_REQUEST as $key => $value ) {
-	$response[$key] = sanitize_text_field( $valu );
+	$response[$key] = sanitize_text_field( $value );
 }
 
 //Full reference of event types and responses:
