@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Paid Memberships Pro - CCBill Gateway
-Plugin URI: https://paidmembershipspro.com/add-ons/pmpro-ccbill
+Plugin URI: https://www.paidmembershipspro.com/add-ons/ccbill
 Description: PMPro Gateway integration for CCBill
 Version: 0.1
 Author: Paid Memberships Pro
@@ -91,7 +91,7 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'pmpro_ccbill_
 function pmpro_ccbill_plugin_row_meta( $links, $file ) {
 	if ( strpos( $file, 'pmpro-ccbill.php' ) !== false ) {
 		$new_links = array(
-			'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-ccbill/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-ccbill' ) ) . '">' . __( 'Docs', 'pmpro-ccbill' ) . '</a>',
+			'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/ccbill/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-ccbill' ) ) . '">' . __( 'Docs', 'pmpro-ccbill' ) . '</a>',
 			'<a href="' . esc_url( 'https://www.paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-ccbill' ) ) . '">' . __( 'Support', 'pmpro-ccbill' ) . '</a>',
 		);
 		$links = array_merge( $links, $new_links );
