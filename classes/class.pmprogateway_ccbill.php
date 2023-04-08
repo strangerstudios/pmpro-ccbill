@@ -289,15 +289,14 @@ class PMProGateway_CCBill extends PMProGateway {
 
 	}
 
-
-	function pmpro_get_digest($initial_price, $initial_period, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code = null, $salt = null ) {
+	function get_digest($initial_price, $initial_period, $currency_code = null, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $salt = null ) {
 
 		// Defaults.
 		if( empty( $currency_code ) ) {
 			$currency_code = PMProGateway_CCBill::get_currency_code();
 		}
 		if( empty( $salt ) ) {
-			$currency_code = pmpro_getOption('ccbill_salt');
+			$salt = pmpro_getOption('ccbill_salt');
 		}
 		
 		$initial_price = number_format($initial_price , 2, ".","");
@@ -451,8 +450,8 @@ class PMProGateway_CCBill extends PMProGateway {
 			$ccbill_args['initialPrice'] = number_format($initial_payment, 2, ".", "");
 
 			//technically, the initial period can be different than the recurring period, but keep it consistant with the other integrations.
-			$ccbill_args['initialPeriod'] = $recurring_period;
-			$ccbill_args['formDigest'] = $this->pmpro_get_digest($initial_payment, $recurring_period, $recurring_price, $recurring_period, $number_of_rebills, $currency_code, $ccbill_salt);
+			$ccbill_args['initialPeriod'] = $this->get_initialPeriod( $order );
+			$ccbill_args['formDigest'] = $this->get_digest($initial_payment, $ccbill_args['initialPeriod'], $currency_code, $recurring_price, $recurring_period, $number_of_rebills );
 			$ccbill_args['pmpro_orderid'] = $order->id;
 			$ccbill_args['email'] = $bemail;
 		
@@ -460,8 +459,8 @@ class PMProGateway_CCBill extends PMProGateway {
 
 			// Non-recurring membership
 			$ccbill_args['initialPrice'] = number_format( $initial_payment, 2, ".", "" );
-			$ccbill_args['initialPeriod'] = 2; //2 is the lowest number you can set, and initialPeriod must be set for non-recurring transactions
-			$ccbill_args['formDigest'] = $this->pmpro_get_digest( $initial_payment, 2, $recurring_price = null, $recurring_period = null, $number_of_rebills = null, $currency_code, $ccbill_salt );
+			$ccbill_args['initialPeriod'] = $this->get_initialPeriod( $order );
+			$ccbill_args['formDigest'] = $this->get_digest( $initial_payment, $ccbill_args['initialPeriod'], $currency_code );
 			$ccbill_args['pmpro_orderid'] = $order->id;
 			$ccbill_args['email'] = $bemail;
 		}
@@ -507,23 +506,24 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		if ( 200 != $response_code && !empty( $response_message ) ) {
 
-  		$cancel_link	= add_query_arg( $qargs, $sms_link );
-	  	$response		= wp_remote_get( $cancel_link );
+			$cancel_link	= add_query_arg( $qargs, $sms_link );
+			$response		= wp_remote_get( $cancel_link );
 
-		  $response_code		= wp_remote_retrieve_response_code( $response );
-		  $response_message	= wp_remote_retrieve_response_message( $response );
+			$response_code		= wp_remote_retrieve_response_code( $response );
+			$response_message	= wp_remote_retrieve_response_message( $response );
 
-		  $response_body		= wp_remote_retrieve_body( $response );
-		  $cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
-		
+			$response_body		= wp_remote_retrieve_body( $response );
+			$cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
+
 			//return new WP_Error( $response_code, $response_message );
 			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
 			$email = get_option("admin_email");
 
-wp_mail( $email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error );
+			wp_mail( $email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error );
 
 		} else if ( 200 != $response_code ) {
+
 			//Unknown Error Occurred
 			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
@@ -579,4 +579,23 @@ wp_mail( $email, get_option("blogname") . __( ' CCBill Subscription Cancel Error
 		return __( "Error Code Unknown", "pmpro-ccbill" );
 	}
 
+	/**
+	 * Calculate the initialPeriod.
+	 * @param object $order The order object.
+	 * @return int The initial period.
+	 */
+	private function get_initialPeriod( $order ) {
+		if ( pmpro_isLevelRecurring( $order->membership_level ) ) {
+			// For recurring payments, period is billing period.
+			$profile_start_date = pmpro_calculate_profile_start_date( $order, 'U', true );
+			$period = ceil( abs( $profile_start_date - time() ) / 86400 );
+			
+			// NOTE: We're not supporting custom trials right now. Probably can't.
+		} else {
+			// Set period to 1 for one time payments.
+			$period = 1;
+		}
+
+		return $period;
+	}
 }
