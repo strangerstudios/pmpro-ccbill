@@ -589,6 +589,9 @@ class PMProGateway_CCBill extends PMProGateway {
 			// For recurring payments, period is billing period.
 			$profile_start_date = pmpro_calculate_profile_start_date( $order, 'U', true );
 			$period = ceil( abs( $profile_start_date - time() ) / 86400 );
+
+			// Period cannot be > 365 days. Usually this is a leap year, but could be due to filters on the startdate.
+			$period = min( $period, 365 );
 			
 			// NOTE: We're not supporting custom trials right now. Probably can't.
 		} else {
