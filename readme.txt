@@ -1,9 +1,9 @@
 === Paid Memberships Pro - CCBill Add On ===
 Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
-Requires at least: 4.0
-Tested up to: 5.5.3
-Stable tag: 0.1
+Requires at least: 5.5
+Tested up to: 6.2
+Stable tag: 0.2
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,10 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 0.2 - 2023-04-09 =
+* BUG FIX: Only cancel relevant URL on sub cancellation.
+* BUG FIX: Fixed calculation of the initialPeriod value passed to CCBill.
+* BUG FIX: Fixed errors in the webhook code.
 
 = 0.1 - 2022-10-05 =
 * Initial Release
