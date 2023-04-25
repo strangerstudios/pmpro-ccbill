@@ -498,7 +498,8 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		$qargs = array();
 		$qargs["action"]		= "cancelSubscription";
-		$qargs["clientSubacc"]	= pmpro_getOption('ccbill_subaccount_number');
+		$qargs["clientSubacc"]	= '';
+		$qargs["usingSubacc"]	= pmpro_getOption('ccbill_subaccount_number');
 		$qargs["subscriptionId"] = $order->subscription_transaction_id;
 		$qargs["clientAccnum"]	= pmpro_getOption('ccbill_account_number');
 		$qargs["username"]		= pmpro_getOption('ccbill_datalink_username'); //must be provided by CCBill
