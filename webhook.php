@@ -43,7 +43,7 @@ switch( $event_type ) {
 		
 		$subscription_id = sanitize_text_field( $response['subscriptionId'] );
 		
-		$morder = new MemberOrder( $order_id );
+		$morder = new MemberOrder();
 		$morder->getLastMemberOrderBySubscriptionTransactionID( $subscription_id );
 		$morder->getMembershipLevel();
 		$morder->getUser();
