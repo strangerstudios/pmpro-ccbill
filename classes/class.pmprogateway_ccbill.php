@@ -504,17 +504,15 @@ class PMProGateway_CCBill extends PMProGateway {
 		$qargs["username"]		= pmpro_getOption('ccbill_datalink_username'); //must be provided by CCBill
 		$qargs["password"]		= pmpro_getOption('ccbill_datalink_password'); //must be provided by CCBill
 
+		$cancel_link	= add_query_arg( $qargs, $sms_link );
+		$response		= wp_remote_get( $cancel_link );
+
+		$response_code		= wp_remote_retrieve_response_code( $response );
+		$response_message	= wp_remote_retrieve_response_message( $response );
+		$response_body		= wp_remote_retrieve_body( $response );
+		$cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
+
 		if ( 200 != $response_code && !empty( $response_message ) ) {
-
-			$cancel_link	= add_query_arg( $qargs, $sms_link );
-			$response		= wp_remote_get( $cancel_link );
-
-			$response_code		= wp_remote_retrieve_response_code( $response );
-			$response_message	= wp_remote_retrieve_response_message( $response );
-
-			$response_body		= wp_remote_retrieve_body( $response );
-			$cancel_status		= filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
-
 			//return new WP_Error( $response_code, $response_message );
 			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
 
@@ -530,7 +528,7 @@ class PMProGateway_CCBill extends PMProGateway {
 			$email = get_option("admin_email");
 			wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 
-		} else if( $cancel_status < 1 )	{
+		} else if( isset( $cancel_status ) && $cancel_status < 1 )	{
 
 			$error_code = $this->pmprocb_return_api_response( $cancel_status );
 
