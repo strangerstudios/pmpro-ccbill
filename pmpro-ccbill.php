@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - CCBill Gateway
 Plugin URI: https://www.paidmembershipspro.com/add-ons/ccbill
 Description: PMPro Gateway integration for CCBill
-Version: 0.2
+Version: 0.3
 Author: Paid Memberships Pro
 Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-ccbill
