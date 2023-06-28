@@ -106,12 +106,12 @@ class PMProGateway_CCBill extends PMProGateway {
 	 */
 	static function pmpro_is_ccbill_ready( $ready ){
 
-		if ( pmpro_getOption('ccbill_account_number') == "" ||
-		pmpro_getOption('ccbill_subaccount_number') == "" ||
-		pmpro_getOption('ccbill_flex_form_id') == "" ||
-		pmpro_getOption('ccbill_salt') == "" ||
-		pmpro_getOption('ccbill_datalink_username') == "" ||
-		pmpro_getOption('ccbill_datalink_password') == "" ){
+		if ( get_option('pmpro_ccbill_account_number') == "" ||
+		get_option('pmpro_ccbill_subaccount_number') == "" ||
+		get_option('pmpro_ccbill_flex_form_id') == "" ||
+		get_option('pmpro_ccbill_salt') == "" ||
+		get_option('pmpro_ccbill_datalink_username') == "" ||
+		get_option('pmpro_ccbill_datalink_password') == "" ){
 			$ready = false;
 		} else {
 			$ready = true;
@@ -296,7 +296,7 @@ class PMProGateway_CCBill extends PMProGateway {
 			$currency_code = PMProGateway_CCBill::get_currency_code();
 		}
 		if( empty( $salt ) ) {
-			$salt = pmpro_getOption('ccbill_salt');
+			$salt = get_option('pmpro_ccbill_salt');
 		}
 		
 		$initial_price = number_format($initial_price , 2, ".","");
@@ -398,10 +398,10 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		//get the options
 
-		$ccbill_account_number = pmpro_getOption('ccbill_account_number');
-		$ccbill_subaccount_number = pmpro_getOption('ccbill_subaccount_number');
-		$ccbill_flex_form_id = pmpro_getOption('ccbill_flex_form_id');
-		$ccbill_salt = pmpro_getOption('ccbill_salt');
+		$ccbill_account_number = get_option('pmpro_ccbill_account_number');
+		$ccbill_subaccount_number = get_option('pmpro_ccbill_subaccount_number');
+		$ccbill_flex_form_id = get_option('pmpro_ccbill_flex_form_id');
+		$ccbill_salt = get_option('pmpro_ccbill_salt');
 
 		$ccbill_flex_forms_url = 'https://api.ccbill.com/wap-frontflex/flexforms/' . $ccbill_flex_form_id;
 
@@ -499,11 +499,11 @@ class PMProGateway_CCBill extends PMProGateway {
 		$qargs = array();
 		$qargs["action"]		= "cancelSubscription";
 		$qargs["clientSubacc"]	= '';
-		$qargs["usingSubacc"]	= pmpro_getOption('ccbill_subaccount_number');
+		$qargs["usingSubacc"]	= get_option('pmpro_ccbill_subaccount_number');
 		$qargs["subscriptionId"] = $order->subscription_transaction_id;
-		$qargs["clientAccnum"]	= pmpro_getOption('ccbill_account_number');
-		$qargs["username"]		= pmpro_getOption('ccbill_datalink_username'); //must be provided by CCBill
-		$qargs["password"]		= pmpro_getOption('ccbill_datalink_password'); //must be provided by CCBill
+		$qargs["clientAccnum"]	= get_option('pmpro_ccbill_account_number');
+		$qargs["username"]		= get_option('pmpro_ccbill_datalink_username'); //must be provided by CCBill
+		$qargs["password"]		= get_option('pmpro_ccbill_datalink_password'); //must be provided by CCBill
 
 		$cancel_link	= add_query_arg( $qargs, $sms_link );
 		$response		= wp_remote_get( $cancel_link );
