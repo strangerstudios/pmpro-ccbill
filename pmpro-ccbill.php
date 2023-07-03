@@ -77,8 +77,9 @@ function pmpro_ccbill_plugin_action_links( $links ) {
 		$new_links = array(
 			'<a href="' . get_admin_url( null, 'admin.php?page=pmpro-paymentsettings' ) . '">' . __( 'Configure CCBill', 'pmpro-ccbill' ) . '</a>',
 		);
+		$links  = array_merge( $links, $new_links );
 	}
-	return array_merge( $new_links, $links );
+	return $links;
 }
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'pmpro_ccbill_plugin_action_links' );
 
