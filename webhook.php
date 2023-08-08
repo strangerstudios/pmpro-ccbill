@@ -20,7 +20,7 @@ foreach( $_REQUEST as $key => $value ) {
 }
 
 // Make sure that the response matches the account number saved to ensure it's for the same account/subscription.
-if ( empty( $response['clientAccNum'] ) || $response['clientAccNum'] !== get_option( 'pmpro_ccbill_account_number', true ) ) {
+if ( empty( $response['clientAccnum'] ) || $response['clientAccnum'] !== get_option( 'pmpro_ccbill_account_number', true ) ) {
 	pmpro_ccbill_webhook_log( __( "There was an error processing your CCBill webhook. Account number doesn't match the one on record.", 'pmpro-ccbill' ) );
 	pmpro_ccbill_Exit();
 }
