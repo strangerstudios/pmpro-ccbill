@@ -36,7 +36,7 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
-= 0.4.1 - 2023-08--08 =
+= 0.4.1 - 2023-08-15 =
 * BUG FIX: Fixed an issue where webhook wasn't being verified correctly.
 
 = 0.4 - 2023-07-27 =
