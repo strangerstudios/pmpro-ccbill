@@ -593,9 +593,13 @@ class PMProGateway_CCBill extends PMProGateway {
 			$period = min( $period, 365 );
 			
 			// NOTE: We're not supporting custom trials right now. Probably can't.
+		} else if ( $order->getMembershipLevel()->enddate ) {
+			// Get the levels expiration and convert it to days.
+			$expiration_date = date( 'Y-m-d', $order->getMembershipLevel()->enddate );
+			$order_date = date( "Y-m-d", $order->timestamp );
+			$period = round( ( strtotime( $expiration_date ) - strtotime( $order_date ) ) / DAY_IN_SECONDS ); 
 		} else {
-			// Set period to 1 for one time payments.
-			$period = 1;
+			$period = 2; //CCBill doesn't allow period values of 1.
 		}
 
 		return $period;
