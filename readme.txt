@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
 Requires at least: 5.5
 Tested up to: 6.2
-Stable tag: 0.3
+Stable tag: 0.4.1
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,12 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 0.4.1 - 2023-08-15 =
+* BUG FIX: Fixed an issue where webhook wasn't being verified correctly.
+
+= 0.4 - 2023-07-27 =
+* SECURITY: Fixed a minor issue to verify the webhook received is related to the correct CCBill account.
+
 = 0.3 - 2023-05-05 =
 * BUG FIX: Fixed issue where cancellations in PMPro were not being sent to CCBill.
 * BUG FIX: Fixed issue where "failed cancellation" emails may be incorrectly sent.
