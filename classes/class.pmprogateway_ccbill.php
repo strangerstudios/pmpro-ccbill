@@ -394,7 +394,7 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		global $pmpro_currency;
 
-		$currency_code = $this->get_currency_code();
+		$currency_code = PMProGateway_CCBill::get_currency_code();
 
 		//get the options
 
@@ -584,7 +584,8 @@ class PMProGateway_CCBill extends PMProGateway {
 	 * @return int The initial period.
 	 */
 	private function get_initialPeriod( $order ) {
-		if ( pmpro_isLevelRecurring( $order->membership_level ) ) {
+		$level = $order->getMembershipLevel();
+		if ( pmpro_isLevelRecurring( $level ) ) {
 			// For recurring payments, period is billing period.
 			$profile_start_date = pmpro_calculate_profile_start_date( $order, 'U', true );
 			$period = ceil( abs( $profile_start_date - time() ) / 86400 );
@@ -593,9 +594,9 @@ class PMProGateway_CCBill extends PMProGateway {
 			$period = min( $period, 365 );
 			
 			// NOTE: We're not supporting custom trials right now. Probably can't.
-		} else if ( $order->getMembershipLevel()->enddate ) {
+		} elseif ( $level->expiration_number > 0 ) {
 			// Get the levels expiration and convert it to days.
-			$expiration_date = date( 'Y-m-d', $order->getMembershipLevel()->enddate );
+			$expiration_date = $this->calculate_expiration_date( $level );
 			$order_date = date( "Y-m-d", $order->timestamp );
 			$period = round( ( strtotime( $expiration_date ) - strtotime( $order_date ) ) / DAY_IN_SECONDS ); 
 		} else {
@@ -603,5 +604,17 @@ class PMProGateway_CCBill extends PMProGateway {
 		}
 
 		return $period;
+	}
+
+	/**
+	 * Convert expiration period to date to YYYY-MM-DD from level expiration settings.
+	 *
+	 * @param MemberOrder $order
+	 * @return string $calculated_date The calculated date of expiration date from todays date. (i.e. 2024-01-31)
+	 */
+	public function calculate_expiration_date( $level ) {
+		//Convert $level->expiration_period + $level->expiration_number to a date.
+		$expiration_date = date( "Y-m-d", strtotime( "+ " . $level->expiration_number . " " . $level->expiration_period, current_time( "timestamp" ) ) );
+		return $expiration_date;
 	}
 }
