@@ -603,7 +603,7 @@ class PMProGateway_CCBill extends PMProGateway {
 			$period = 2; //CCBill doesn't allow period values of 1.
 		}
 
-		return $period;
+		return (int) $period;
 	}
 
 	/**
