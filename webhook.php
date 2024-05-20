@@ -72,6 +72,19 @@ switch( $event_type ) {
 		
 	break;
 
+	case 'RenewalFailure':
+		
+		$subscription_id = sanitize_text_field( $response['subscriptionId'] );
+		
+		$morder = new MemberOrder();
+		$morder->getLastMemberOrderBySubscriptionTransactionID( $subscription_id );
+		$morder->getMembershipLevel();
+		$morder->getUser();
+		
+		if(pmpro_ccbill_RecurringCancel($morder))
+			pmpro_ccbill_Exit();
+	break;
+
 	default:
 		do_action('pmpro_ccbill_other_webhook_events', $event_type);
 		pmpro_ccbill_Exit();
