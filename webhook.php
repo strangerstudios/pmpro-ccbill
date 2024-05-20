@@ -45,7 +45,7 @@ switch( $event_type ) {
 		
 	break;
 
-	case 'Cancellation':
+	case 'Expiration':
 		
 		$subscription_id = sanitize_text_field( $response['subscriptionId'] );
 		
