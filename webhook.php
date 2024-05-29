@@ -1,7 +1,7 @@
 <?php
 
 //set this in your wp-config.php for debugging
-//define('PMPRO_CCBILL_DEBUG', true);
+//define( 'PMPRO_CCBILL_DEBUG', true );
 
 global $wpdb, $gateway_environment, $logstr;
 
@@ -254,7 +254,7 @@ function pmpro_ccbill_Exit( $redirect = false ) {
 	//echo $logstr;
 	$logstr = var_export( $_REQUEST, true ) . sprintf( __( 'Logged On: %s', 'pmpro-ccbill' ), date_i18n("m/d/Y H:i:s") ) . "\n" . $logstr . "\n-------------\n";
 	//log in file or email?
-	if ( defined( 'PMPRO_CCBILL_DEBUG' ) && PMPRO_CCBILL_DEBUG === "log" ) {
+	if ( defined( 'PMPRO_CCBILL_DEBUG' ) && PMPRO_CCBILL_DEBUG === true ) {
 		//file
 		$loghandle = fopen(PMPRO_CCBILL_DIR. "/logs/ccbill_webhook.txt", "a+");
 		fwrite($loghandle, $logstr);
