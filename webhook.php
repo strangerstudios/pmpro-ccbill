@@ -409,3 +409,14 @@ function pmpro_ccbill_Exit( $redirect = false ) {
 
 	exit;
 }
+
+/**
+ * Run Post Subscription Renewal Tasks
+ *
+ * @param  object $order
+ * @return void
+ */
+function pmpro_ccbill_UpdateSubscription( $order ) : void {
+	pmpro_ccbill_Exit();
+}
+// add_action( 'pmpro_subscription_payment_completed', 'pmpro_ccbill_UpdateSubscription' );
