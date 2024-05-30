@@ -334,7 +334,7 @@ function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void 
 		/**
 		 * Order exists, log and exit
 		 */
-		pmpro_ccbill_webhook_log( sprintf( __( 'An order with that payment ID already exists (%s).', 'pmpro_ccbill' ), $transaction_id ) );
+		pmpro_ccbill_webhook_log( sprintf( __( 'An order with that payment ID (%s) already exists.', 'pmpro_ccbill' ), $transaction_id ) );
 
 		pmpro_ccbill_Exit();
 	}
