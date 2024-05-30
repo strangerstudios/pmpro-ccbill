@@ -63,18 +63,18 @@ switch ( $event_type ) {
 	break;
 
 	case 'RenewalSuccess':
-		
-		$order_id = sanitize_text_field( $response['X-pmpro_orderid'] );
-		
-		$morder = new MemberOrder( $order_id );
-		$morder->getMembershipLevel();
-		$morder->getUser();
-		
-		pmpro_ccbill_ChangeMembershipLevel($response, $morder);
-		
+		$status = 'success';
+		pmpro_ccbill_AddRenewal( $response, $status );
 		pmpro_ccbill_Exit();
-		
-	break;
+
+		break;
+
+	case 'RenewalFailure':
+		$status     = 'error';
+		pmpro_ccbill_AddRenewal( $response, $status );
+		pmpro_ccbill_Exit();
+
+		break;
 
 	default:
 		do_action('pmpro_ccbill_other_webhook_events', $event_type);
@@ -218,7 +218,127 @@ function pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) {
 	} else {
 		return false;	
 	}
+
+}
+
+/**
+ * Add Renewal Order
+ *
+ * @param  array  $response
+ * @param  string $status
+ * @return void
+ */
+function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void {
+	$transaction_id  = $response['transactionId'];
+	$subscription_id = $response['subscriptionId'];
+	$timestamp       = $response['timestamp'];
+	$payment_type    = $response['paymentType'];
+	$card_type       = $response['cardType'];
+	$renewal_date    = $response['renewalDate'];
 	
+	$morder          = new MemberOrder();
+	$old_transaction = $morder->getMemberOrderByPaymentTransactionID( $transaction_id );
+
+	if ( empty( $old_transaction ) ) {
+		/**
+		 * Order doesn't exist
+		 */
+		$lmorder    = new MemberOrder();
+		$last_order = $lmorder->getLastMemberOrderBySubscriptionTransactionID( $subscription_id );
+
+		pmpro_ccbill_webhook_log( '$lmorder ' . json_encode( $lmorder ) );
+
+		if ( empty( $last_order ) ) {
+			/**
+			 * No order found for subscription
+			 */
+			pmpro_ccbill_webhook_log( sprintf( __( 'Subscription not found (%s).', 'pmpro_ccbill' ), $subscription_id ) );
+
+		} else {
+			/**
+			 * Subscription exists, create a new order
+			 */
+			$user_id = $lmorder->user_id;
+			$user    = get_userdata( $user_id );
+
+			if ( empty( $user ) ) {
+				pmpro_ccbill_webhook_log( sprintf( __( 'Couldn\'t find the old order\'s user. Order ID (%s).', 'pmpro_ccbill' ), $last_order->id ) );
+
+				pmpro_ccbill_Exit();
+			}
+
+			$user->membership_level = pmpro_getMembershipLevelForUser( $user_id );
+
+			pmpro_ccbill_webhook_log( '$user ' . json_encode( $user ) );
+
+			$order = new MemberOrder();
+
+			$order->user_id                     = $user_id;
+			$order->status                      = $status;
+			$order->membership_id               = $user->membership_level->id;
+			$order->payment_transaction_id      = $transaction_id;
+			$order->subscription_transaction_id = $subscription_id;
+			$order->gateway                     = get_option( 'pmpro_gateway' );
+			$order->gateway_environment         = get_option( 'pmpro_gateway_environment' );
+			$order->timestamp                   = $timestamp;
+			$order->payment_type                = $payment_type;
+			$order->cardtype                    = $card_type;
+
+			$order->find_billing_address();
+
+			if ( 'error' === $status ) {
+				$order->notes = sprintf( 'Renewal failed: %s (%s). Retry on %s.', $response['failureReason'], $response['failureCode'], $response['nextRetryDate'] );
+
+				/**
+				 * Send customer email
+				 */
+				$email = new PMProEmail();
+				$email->sendBillingFailureEmail( $user, $order );
+
+				do_action( 'pmpro_subscription_payment_failed', $last_order );
+
+			} else {
+				$card_number    = $response['last4'];
+				$card_exp       = $response['expDate'];
+				$total          = $response['accountingAmount'];
+				$card_exp_month = substr( $card_exp, 0, 2 );
+				$card_exp_year  = '20' . substr( $card_exp, 2 );
+
+				$order->accountnumber   = 'XXXXXXXXXXXX' . $card_number;
+				$order->expirationmonth = $card_exp_month;
+				$order->expirationyear  = $card_exp_year;
+				$order->subtotal        = $total;
+				$order->total           = $total;
+			}
+
+			$order->saveOrder();
+
+			if ( $order->id ) {
+				$order->getMemberOrderByID( $order->id );
+
+				/**
+				 * Send customer email
+				 */
+				$email = new PMProEmail();
+				$email->sendInvoiceEmail( $user, $order );
+
+				pmpro_ccbill_webhook_log( sprintf( __( 'Order created (%1$s) for subscription # (%2$s).', 'pmpro_ccbill' ), $order->id, $subscription_id ) );
+
+				do_action( 'pmpro_subscription_payment_completed', $order, $response );
+			}
+		}
+
+		pmpro_ccbill_Exit();
+
+	} else {
+		/**
+		 * Order exists, log and exit
+		 */
+		pmpro_ccbill_webhook_log( sprintf( __( 'An order with that payment ID already exists (%s).', 'pmpro_ccbill' ), $transaction_id ) );
+
+		pmpro_ccbill_Exit();
+	}
+
 }
 
 function pmpro_ccbill_RecurringCancel( $morder ) {
