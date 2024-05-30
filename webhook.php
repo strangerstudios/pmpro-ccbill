@@ -29,9 +29,9 @@ if ( empty( $response['clientAccnum'] ) || $response['clientAccnum'] !== get_opt
 	pmpro_ccbill_Exit();
 }
 
-//Full reference of event types and responses:
-//https://kb.ccbill.com/Webhooks+User+Guide
-switch( $event_type ) {
+// Full reference of event types and responses:
+// https://ccbill.com/doc/webhooks-overview
+switch ( $event_type ) {
 
 	case 'NewSaleSuccess':
 
