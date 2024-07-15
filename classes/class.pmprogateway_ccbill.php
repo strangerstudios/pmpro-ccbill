@@ -243,8 +243,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		?>
 		<span id="pmpro_submit_span">
 			<input type="hidden" name="submit-checkout" value="1" />
-			<input type="submit" class="pmpro_btn pmpro_btn-submit-checkout" value="<?php if($pmpro_requirebilling) { esc_html_e( 'Check Out with CCBill', 'pmpro-ccbill' ); } else { esc_html_e( 'Submit and Confirm', 'pmpro-ccbill' ); } ?> &raquo;" />
-		</span>
+			<input type="submit" id="pmpro_btn-submit" class="<?php echo esc_attr( pmpro_get_element_class(  'pmpro_btn pmpro_btn-submit-checkout'  ) ); ?>" value="<?php if( $pmpro_requirebilling ) { esc_html_e( 'Check Out with CCBill', 'pmpro-ccbill' ); } else { esc_html_e( 'Submit and Confirm', 'pmpro-ccbill' ); } ?>" /></span>
 		<?php
 
 		//don't show the default
