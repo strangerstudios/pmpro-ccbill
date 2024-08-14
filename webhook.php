@@ -16,11 +16,7 @@ $event_type = pmpro_getParam('eventType', 'REQUEST');
 $response = array();
 
 foreach ( $_REQUEST as $key => $value ) {
-	if ( 'timestamp' === $key ) {
-		$response[ $key ] = date( 'Y-m-d H:i:s', strtotime( sanitize_text_field( $value ) ) );
-	} else {
-		$response[ $key ] = sanitize_text_field( $value );
-	}
+	$response[ $key ] = sanitize_text_field( $value );
 }
 
 // Make sure that the response matches the account number saved to ensure it's for the same account/subscription.
