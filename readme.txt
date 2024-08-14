@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
 Requires at least: 5.5
-Tested up to: 6.5
-Stable tag: 0.5
+Tested up to: 6.6
+Stable tag: 0.5.1
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,9 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 0.5.1 - 2024-08-14 =
+* BUG FIX: Fixed an issue where recurring orders would show an incorrect date. (Thanks @misfist)
+
 = 0.5 - 2024-07-15 =
 * ENHANCEMENT: Added improved support for renewals and renewal failures. (Thanks @misfist for your contribution)
 * ENHANCEMENT: Added support for "Expired" webhook event types, when a subscription has expired. (@andrewlimaza)
