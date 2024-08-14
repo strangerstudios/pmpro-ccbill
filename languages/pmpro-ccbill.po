@@ -2,16 +2,16 @@
 # This file is distributed under the same license as the Paid Memberships Pro - CCBill Gateway plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Paid Memberships Pro - CCBill Gateway 0.5\n"
+"Project-Id-Version: Paid Memberships Pro - CCBill Gateway 0.5.1\n"
 "Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
 "Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-07-15T14:24:08+00:00\n"
+"POT-Creation-Date: 2024-08-14T08:18:48+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.10.0\n"
+"X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: pmpro-ccbill\n"
 
 #. Plugin Name of the plugin
@@ -260,24 +260,29 @@ msgstr ""
 
 #: webhook.php:192
 #: webhook.php:203
+#: webhook.php:199
 msgid "CHANGEMEMBERSHIPLEVEL: ORDER: "
 msgstr ""
 
 #: webhook.php:228
 #: webhook.php:361
+#: webhook.php:357
 msgid "Subscription Cancelled (%s)"
 msgstr ""
 
 #: webhook.php:249
 #: webhook.php:382
+#: webhook.php:378
 msgid "Logged On: %s"
 msgstr ""
 
 #: webhook.php:264
 #: webhook.php:397
+#: webhook.php:393
 msgid "CCBill Webhook Log"
 msgstr ""
 
 #: webhook.php:28
+#: webhook.php:24
 msgid "There was an error processing your CCBill webhook. Account number doesn't match the one on record."
 msgstr ""
