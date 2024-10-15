@@ -252,8 +252,6 @@ class PMProGateway_CCBill extends PMProGateway {
 
 	/**
 	 * Instead of change membership levels, send users to CCBill to pay.
-	 *
-	 *
 	 */
 	static function pmpro_checkout_before_change_membership_level( $user_id, $morder ) {
 
@@ -261,6 +259,11 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		//if no order, no need to pay
 		if ( empty( $morder ) ) {
+			return;
+		}
+
+		// Bail for free checkouts.
+		if ( $morder->gateway != 'ccbill' ) {
 			return;
 		}
 
