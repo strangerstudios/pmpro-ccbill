@@ -228,7 +228,7 @@ function pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) {
 function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void {
 	$transaction_id  = $response['transactionId'];
 	$subscription_id = $response['subscriptionId'];
-	$timestamp       = $response['timestamp'];
+	$timestamp       = is_numeric( $response['timestamp'] ) ? $response['timestamp'] : strtotime( $response['timestamp'] ); // Convert to a timestamp if it's not already passed through.
 	$payment_type    = $response['paymentType'];
 	$card_type       = $response['cardType'];
 	$renewal_date    = $response['renewalDate'];
