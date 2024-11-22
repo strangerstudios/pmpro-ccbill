@@ -382,6 +382,7 @@ class PMProGateway_CCBill extends PMProGateway {
 	}
 
 	function sendToCCBill( &$order ) {
+		global $pmpro_currency;
 
 		$first_name	= pmpro_getParam('bfirstname', 'REQUEST');
 		$last_name	= pmpro_getParam('blastname', 'REQUEST');
@@ -389,12 +390,10 @@ class PMProGateway_CCBill extends PMProGateway {
 		$baddress2	= pmpro_getParam('baddress2',  'REQUEST');
 		$bcity		= pmpro_getParam('bcity', 'REQUEST');
 		$bstate		= pmpro_getParam('bstate', 'REQUEST');
-		$bzipcode		= pmpro_getParam('bzipcode', 'REQUEST');
-		$bcountry		= pmpro_getParam('bcountry', 'REQUEST');
+		$bzipcode	= pmpro_getParam('bzipcode', 'REQUEST');
+		$bcountry	= pmpro_getParam('bcountry', 'REQUEST');
 		$bphone		= pmpro_getParam('bphone', 'REQUEST');
 		$bemail		= pmpro_getParam('bemail', 'REQUEST');
-
-		global $pmpro_currency;
 
 		$currency_code = PMProGateway_CCBill::get_currency_code();
 
@@ -472,10 +471,17 @@ class PMProGateway_CCBill extends PMProGateway {
 		$ccbill_args['customer_lname'] = $last_name;
 		$ccbill_args['address1'] = $baddress1. " ".$baddress2; //only one line in CCBill for Address
 		$ccbill_args['city'] = $bcity;
-		$ccbill_args['state'] =$bstate;
-		$ccbill_args['zipcode'] =$bzipcode;
+		$ccbill_args['state'] = $bstate;
+		$ccbill_args['zipcode'] = $bzipcode;
 		$ccbill_args['country'] = $bcountry;
 		$ccbill_args['phone_number'] = $bphone;
+
+		/**
+		 * Filter the CCBill checkout arguments to allow more flexibility.
+		 * @param array $ccbill_args array The CCBill checkout arguments generated for checkout.
+		 * @since TBD
+		 */
+		$ccbill_args = apply_filters( 'pmpro_ccbill_checkout_args', $ccbill_args, $order );
 
 		$ccbill_url	= add_query_arg( $ccbill_args, $ccbill_flex_forms_url );
 
