@@ -270,6 +270,9 @@ class PMProGateway_CCBill extends PMProGateway {
 		$morder->user_id = $user_id;
 		$morder->saveOrder();
 
+		//Save checkout data in order meta before sending user offsite to pay.
+		pmpro_save_checkout_data_to_order( $morder );
+
 		//save discount code use
 		if ( ! empty( $discount_code_id ) ) {
 			$wpdb->query(
