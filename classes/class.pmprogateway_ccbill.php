@@ -34,7 +34,6 @@ class PMProGateway_CCBill extends PMProGateway {
 			add_filter( 'pmpro_include_payment_information_fields', '__return_false');
 			add_filter( 'pmpro_required_billing_fields', array( 'PMProGateway_CCBill', 'pmpro_required_billing_fields' ) );
 			add_filter( 'pmpro_checkout_default_submit_button', array( 'PMProGateway_CCBill', 'pmpro_checkout_default_submit_button' ) );
-			add_filter( 'pmpro_checkout_before_change_membership_level', array( 'PMProGateway_CCBill', 'pmpro_checkout_before_change_membership_level' ), 10, 2);
 		}
 	}
 
@@ -329,15 +328,14 @@ class PMProGateway_CCBill extends PMProGateway {
 		if ( empty( $order->code ) ) {
 			$order->code = $order->getRandomCode();
 		}
-
 		//clean up a couple values
 		$order->payment_type = "CCBill";
 		$order->CardType = "";
 		$order->cardtype = "";
-
-		//just save, the user will go to CCBill to pay
 		$order->status = "pending";
-		$order->saveOrder();
+		//do we still need to assign these above to the order ?
+
+		self::pmpro_checkout_before_change_membership_level( $order->user_id, $order );
 		return true;
 	}
 
