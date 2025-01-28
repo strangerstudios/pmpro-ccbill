@@ -381,6 +381,12 @@ class PMProGateway_CCBill extends PMProGateway {
 		return $currency_code;
 	}
 
+	/**
+	 * Send the user to CCBill to pay.
+	 *
+	 * @param MemberOrder $order  MemberOrder object for this checkout.
+	 * @since TBD
+	 */
 	function sendToCCBill( &$order ) {
 		global $pmpro_currency;
 
@@ -412,14 +418,15 @@ class PMProGateway_CCBill extends PMProGateway {
 		$ccbill_args['currencyCode'] = $currency_code;
 
 		//taxes on initial amount
-		$initial_payment = $order->InitialPayment;
-		$initial_payment_tax = $order->getTaxForPrice($initial_payment);
-		$initial_payment = pmpro_round_price( (float)$initial_payment + (float)$initial_payment_tax );
+		$initial_subtotal = $order->subtotal;
+		$initial_tax = $order->getTaxForPrice( $initial_subtotal );
+		$initial_payment_amount = pmpro_round_price( (float) $initial_subtotal  + (float) $initial_tax );
 
-		// Recurring membership
-		if ( pmpro_isLevelRecurring( $order->membership_level ) ) {
+		// Now, let's handle the recurring payments.
+		$level = $order->getMembershipLevelAtCheckout();
+		if ( pmpro_isLevelRecurring( $level ) ) {
 
-			$recurring_price = number_format($order->membership_level->billing_amount, 2, ".", "");
+			$recurring_price = number_format( $level->billing_amount, 2, ".", "" );
 
 			$recurring_period = '';
 
@@ -427,20 +434,29 @@ class PMProGateway_CCBill extends PMProGateway {
 			//are best set in days, so there is no confusion over off by 1 etc.
 
 			//figure out days based on period
-			if ( $order->BillingPeriod == "Day" ){
-				$recurring_period = 1*$order->membership_level->cycle_number;
-			} else if ( $order->BillingPeriod == "Week" ) {
-				$recurring_period = 7*$order->membership_level->cycle_number;
-			} else if ( $order->BillingPeriod == "Month" ) {
-				$recurring_period = 30*$order->membership_level->cycle_number;
-			} else if ( $order->BillingPeriod == "Year" ) {
-				$recurring_period = 365*$order->membership_level->cycle_number;
+			$cycle_period = $level->cycle_period;
+			$cycle_number = $level->cycle_number;
+
+			switch ( $cycle_period ) {
+				case "Week":
+					$recurring_period = 7 * $cycle_number;
+					break;
+				case "Month":
+					$recurring_period = 30 * $cycle_number;
+					break;
+				case "Year":
+					$recurring_period = 365 * $cycle_number;
+					break;
+				default:
+				case "day":
+					$recurring_period = 1 * $cycle_number;
+				break;
 			}
 
 			$number_of_rebills = '';
 
-			if ( ! empty( $order->membership_level->billing_limit ) ) {
-				$number_of_rebills = $order->membership_level->billing_limit;
+			if ( ! empty( $level->billing_limit ) ) {
+				$number_of_rebills = $level->billing_limit;
 			} else {
 				$number_of_rebills = 99; //means unlimited
 			}
@@ -448,20 +464,20 @@ class PMProGateway_CCBill extends PMProGateway {
 			$ccbill_args['recurringPrice'] = $recurring_price;
 			$ccbill_args['recurringPeriod'] = $recurring_period;
 			$ccbill_args['numRebills'] = $number_of_rebills;
-			$ccbill_args['initialPrice'] = number_format($initial_payment, 2, ".", "");
+			$ccbill_args['initialPrice'] = number_format( $initial_payment_amount, 2, ".", "" );
 
 			//technically, the initial period can be different than the recurring period, but keep it consistant with the other integrations.
 			$ccbill_args['initialPeriod'] = $this->get_initialPeriod( $order );
-			$ccbill_args['formDigest'] = $this->get_digest($initial_payment, $ccbill_args['initialPeriod'], $currency_code, $recurring_price, $recurring_period, $number_of_rebills );
+			$ccbill_args['formDigest'] = $this->get_digest( $initial_payment_amount, $ccbill_args['initialPeriod'], $currency_code, $recurring_price, $recurring_period, $number_of_rebills );
 			$ccbill_args['pmpro_orderid'] = $order->id;
 			$ccbill_args['email'] = $bemail;
 		
 		} else {	
 
 			// Non-recurring membership
-			$ccbill_args['initialPrice'] = number_format( $initial_payment, 2, ".", "" );
+			$ccbill_args['initialPrice'] = number_format( $initial_payment_amount, 2, ".", "" );
 			$ccbill_args['initialPeriod'] = $this->get_initialPeriod( $order );
-			$ccbill_args['formDigest'] = $this->get_digest( $initial_payment, $ccbill_args['initialPeriod'], $currency_code );
+			$ccbill_args['formDigest'] = $this->get_digest( $initial_payment_amount, $ccbill_args['initialPeriod'], $currency_code );
 			$ccbill_args['pmpro_orderid'] = $order->id;
 			$ccbill_args['email'] = $bemail;
 		}
