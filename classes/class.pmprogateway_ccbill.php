@@ -339,7 +339,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		$order->cardtype = "";
 
 		//just save, the user will go to CCBill to pay
-		$order->status = "pending";
+		$order->status = "token";
 		$order->saveOrder();
 		return true;
 	}
