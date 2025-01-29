@@ -33,14 +33,13 @@ switch ( $event_type ) {
 
 		$order_id = sanitize_text_field( $response['X-pmpro_orderid'] );
 		$morder = new MemberOrder( $order_id );
-		$morder->getMembershipLevel();
-		$morder->getUser();
-		
-		if ( pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) ) {
+
+		//run the function to complete checkout
+		if ( pmpro_complete_checkout( $morder ) ) {
 			//Log the event
 			pmpro_ccbill_webhook_log( sprintf( __( "Checkout processed (%s) success!", 'pmpro_ccbill'), $morder->code ) );
 		}
-		
+
 		pmpro_ccbill_Exit();
 		
 	break;
@@ -80,7 +79,19 @@ switch ( $event_type ) {
 	break;	
 }
 
+
+/**
+ *  Change Membership Level for CCBill. Deprecated,use pmpro_complete_checkout instead.
+ *
+ * @param  array $response
+ * @param  MemberOrder $morder
+ * @return bool
+ * @since TBD
+ * @deprecated TBD
+ */
 function pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) {
+	//show deprecated message
+	_deprecated_function( __FUNCTION__, 'TBD', 'pmpro_complete_checkout' );
 
 	//filter for level
 	$morder->membership_level = apply_filters( "pmpro_ccbill_handler_level", $morder->membership_level, $morder->user_id );
