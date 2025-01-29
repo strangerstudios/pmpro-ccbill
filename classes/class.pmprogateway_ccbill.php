@@ -491,6 +491,13 @@ class PMProGateway_CCBill extends PMProGateway {
 		exit;
 	}
 
+	/**
+	 * Process a cancellation in CCBill.
+	 *
+	 * @param object $order
+	 * @return boolean
+	 * @since TBD
+	 */
 	function cancel( &$order ) {
 
 		//no matter what happens below, we're going to cancel the order in our system
@@ -547,11 +554,11 @@ class PMProGateway_CCBill extends PMProGateway {
 				$email = get_option("admin_email");
 				wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 			} else {
-				// Success
+				//success, let's return true
+				return true;
 			}
 		}
-    
-		return $order;
+		return false;
 	}
 
 	function pmprocb_return_api_response( $code ) {
@@ -624,5 +631,25 @@ class PMProGateway_CCBill extends PMProGateway {
 		//Convert $level->expiration_period + $level->expiration_number to a date.
 		$expiration_date = date( "Y-m-d", strtotime( "+ " . $level->expiration_number . " " . $level->expiration_period, current_time( "timestamp" ) ) );
 		return $expiration_date;
+	}
+
+	/**
+	 * Cancels a subscription in CCBill.
+	 *
+	 * @param PMPro_Subscription $subscription to cancel.
+	 * @return bool True if successful, false otherwise.
+	 * @since TBD
+	 */
+	function cancel_subscription( $subscription ) {
+		//get subscription id
+		$subscription_id = $subscription->get_subscription_transaction_id();
+		$last_order = $subscription->get_orders( array( 'subscription_transaction_id' => $subscription_id, 'limit' => 1 ) );
+
+		//Bail if no order found.
+		if ( empty( $last_order ) ) {
+			return false;
+		}
+
+		return $this->cancel( $last_order[0] );
 	}
 }
