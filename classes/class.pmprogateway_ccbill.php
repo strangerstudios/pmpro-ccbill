@@ -670,4 +670,144 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		return false;
 	}
+
+	/** Pull subscription status from CCBill
+	 *
+	 * @param PMPro_Subscription $subscription The subscription object.
+	 * @return string|null Error message is returned if update fails.
+	 * @since TBD
+	 */
+	public function update_subscription_info( $subscription ) {
+
+		// Bail if subscription ID is missing		
+		if ( empty( $subscription->get_subscription_transaction_id() ) ) {
+			return __( 'Subscription transaction ID is missing.', 'pmpro-ccbill' );
+		}
+
+		//build the URL
+		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi?";
+
+		$qargs = array();
+		$qargs["action"] = "viewSubscriptionStatus";
+		$qargs["clientSubacc"] = '';
+		$qargs["usingSubacc"] = get_option( 'pmpro_ccbill_subaccount_number' );
+		$qargs["subscriptionId"] = $subscription->get_subscription_transaction_id();
+		$qargs["clientAccnum"] = get_option( 'pmpro_ccbill_account_number' );
+		$qargs["username"] = get_option( 'pmpro_ccbill_datalink_username' );
+		$qargs["password"] = get_option( 'pmpro_ccbill_datalink_password' );
+
+		$subscription_link = add_query_arg( $qargs, $sms_link );
+		$response = wp_remote_get( $subscription_link );
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_message = wp_remote_retrieve_response_message( $response );
+
+		//Bail if error
+		if ( 200 != $response_code ) {
+			$error = sprintf( __( 'Subscription status for subscription id: %s may have failed. Check CCBill Admin to confirm status', 'pmpro-ccbill' ), $subscription->get_subscription_transaction_id() );
+			if ( ! empty( $response_message ) ) {
+				$error .= ' ' . $response_message;
+			}
+			return $error;
+		}
+
+		// Get response body (CSV format)
+		$body = wp_remote_retrieve_body( $response );
+
+		// Bail if empty response
+		if ( empty( $body ) ) {
+			return __( 'Empty response from CCBill.', 'pmpro-ccbill' );
+		}
+
+
+		
+		/**
+		 * CCBill doesn't have a sandbox accountMock CSV response body, uncomment if need  test it.
+		 * Change values according to the test scenario you need.
+		 * 
+		 * $body = <<<CSV
+		 * 	"cancelDate","signupDate","chargebacksIssued","timesRebilled","expirationDate","recurringSubscription","subscriptionStatus","refundsIssued","voidsIssued"
+		 * 	"20250131","20250131","0","0","20250131","1","0","1","0"
+		 * 	CSV;
+		 */
+
+		// Parse CSV response
+		$lines = explode( "\n", trim( $body ) ); // Split by lines
+		if ( count( $lines ) < 2 ) {
+			return __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' );
+		}
+
+		$headers = str_getcsv( $lines[0] ); // First row contains column names
+		$values = str_getcsv( $lines[1] );  // Second row contains actual data
+
+		// Bail if mismatched columns and values
+		if ( count( $headers ) !== count( $values ) ) {
+			return __( 'Mismatched CSV columns and values.', 'pmpro-ccbill' );
+		}
+
+		// Convert CSV data into an associative array
+		$data = array_combine($headers, $values);
+		//Bail if no results
+		if ( isset( $data['results'] ) && $data['results'] === "-1" ) {
+			return __( 'No data returned from CCBill.', 'pmpro-ccbill' );
+		}
+
+		// Bail if not recurring subscription
+		if ( isset( $data['recurringSubscription'] ) ) {
+			$recurring = intval( $data['recurringSubscription'] );
+			if ( ! $recurring ) {
+				return __( 'Subscription is not recurring.', 'pmpro-ccbill' );
+			}
+		}
+
+		// Extract and assign values only if they exist
+		$update_array = array();
+
+		// Assign status immediately
+		if ( isset( $data['subscriptionStatus'] ) ) {
+			$status_code = intval( $data['subscriptionStatus'] );
+			if ( $status_code > 1 ) {
+				$update_array['status'] = 'active';
+			} else {
+				$update_array['status'] = 'cancelled';
+			}
+		}
+
+		// Extract and format dates if they exist
+		if ( isset( $data['signupDate'] ) && ! empty( $data['signupDate'] ) ) {
+			$update_array['startdate'] = date( 'Y-m-d H:i:s', strtotime( $data['signupDate'] ) );
+		}
+
+		if ( isset( $data['expirationDate'] ) && ! empty( $data['expirationDate'] ) ) {
+			$update_array['next_payment_date'] = date( 'Y-m-d H:i:s', strtotime( $data['expirationDate'] ) );
+		}
+
+		if ( isset( $data['cancelDate'] ) && ! empty( $data['cancelDate'] ) ) {
+			if ( $status_code < 2 ) { // Only set end date if cancelled
+				$update_array['enddate'] = date( 'Y-m-d H:i:s', strtotime( $data['cancelDate'] ) );
+			}
+		}
+
+		// Update subscription object
+		$subscription->set( $update_array );
+	}
+
+	/**
+	 * Check whether or not a gateway supports a specific feature.
+	 *
+	 * @param string $feature The feature to check.
+	 * @return bool True if the gateway supports the feature, false if not.
+	 * @since TBD
+	 */
+	public static function supports( $feature ) {
+		$supports = array(
+			'subscription_sync' => true,
+		);
+
+		if ( empty( $supports[$feature] ) ) {
+			return false;
+		}
+
+		return $supports[$feature];
+	}
 }
