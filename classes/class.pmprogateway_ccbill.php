@@ -602,7 +602,7 @@ class PMProGateway_CCBill extends PMProGateway {
 	 */
 	function cancel_subscription_at_gateway( $subscription_id ) {
 		//build the URL
-		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi?";
+		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
 
 		$qargs = array();
 		$qargs["action"]		= "cancelSubscription";
