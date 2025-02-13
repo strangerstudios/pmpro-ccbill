@@ -48,14 +48,9 @@ switch ( $event_type ) {
 	case 'Cancellation':
 		
 		$subscription_id = sanitize_text_field( $response['subscriptionId'] );
-		
-		$morder = new MemberOrder();
-		$morder->getLastMemberOrderBySubscriptionTransactionID( $subscription_id );
-		$morder->getMembershipLevel();
-		$morder->getUser();
-		
-		if(pmpro_ccbill_RecurringCancel($morder))
-			pmpro_ccbill_Exit();
+
+		pmpro_ccbill_webhook_log( pmpro_handle_subscription_cancellation_at_gateway( $subscription_id, 'ccbill', 'live' ) );
+		pmpro_ccbill_Exit();
 	break;
 
 	case 'RenewalSuccess':
@@ -352,7 +347,16 @@ function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void 
 
 }
 
+/**
+ * Cancel level for a subscription. Deprecated, call pmpro_handle_subscription_cancellation_at_gateway instead.
+ *
+ * @param MemberOrder $morder The order object.
+ * return bool True if the cancellation was successful, false otherwise.
+ * @since TBD
+ * @deprecated TBD
+ */
 function pmpro_ccbill_RecurringCancel( $morder ) {
+	_deprecated_function( __FUNCTION__, 'TBD', 'pmpro_handle_subscription_cancellation_at_gateway' );
 
 	global $pmpro_error;
 	$worked = pmpro_cancelMembershipLevel( $morder->membership_level->id, $morder->user_id, 'inactive' );
