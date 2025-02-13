@@ -493,67 +493,21 @@ class PMProGateway_CCBill extends PMProGateway {
 		exit;
 	}
 
+	/**
+	 * Process a cancellation in CCBill.
+	 *
+	 * @param MemberOrder $order The order object.
+	 * @return boolean True if canceled successfuly, false otherwise.
+	 * @since TBD
+	 */
 	function cancel( &$order ) {
-
-		//no matter what happens below, we're going to cancel the order in our system
-
-		$order->updateStatus( "cancelled" );
 		//require a payment transaction id
 		if ( empty( $order->subscription_transaction_id ) ) {
 			return false;
 		}
 
-		//build the URL
-		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi?";
-
-		$qargs = array();
-		$qargs["action"]		= "cancelSubscription";
-		$qargs["clientSubacc"]	= '';
-		$qargs["usingSubacc"]	= get_option('pmpro_ccbill_subaccount_number');
-		$qargs["subscriptionId"] = $order->subscription_transaction_id;
-		$qargs["clientAccnum"]	= get_option('pmpro_ccbill_account_number');
-		$qargs["username"]		= get_option('pmpro_ccbill_datalink_username'); //must be provided by CCBill
-		$qargs["password"]		= get_option('pmpro_ccbill_datalink_password'); //must be provided by CCBill
-
-		$cancel_link	= add_query_arg( $qargs, $sms_link );
-		$response		= wp_remote_get( $cancel_link );
-
-		$response_code		= wp_remote_retrieve_response_code( $response );
-		$response_message	= wp_remote_retrieve_response_message( $response );
-
-		if ( 200 != $response_code && !empty( $response_message ) ) {
-			//return new WP_Error( $response_code, $response_message );
-			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
-
-			$email = get_option("admin_email");
-
-			wp_mail( $email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error );
-
-		} else if ( 200 != $response_code ) {
-
-			//Unknown Error Occurred
-			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $order->subscription_transaction_id );
-
-			$email = get_option("admin_email");
-			wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
-
-		} else {
-			$response_body = wp_remote_retrieve_body( $response );
-			$cancel_status = filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
-			if ( $cancel_status < 1 ) {
-				$error_code = $this->pmprocb_return_api_response( $cancel_status );
-
-				//A CCBill Error has occured. They need to contact CCBill
-				$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $order->subscription_transaction_id, $error_code );
-
-				$email = get_option("admin_email");
-				wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
-			} else {
-				// Success
-			}
-		}
-    
-		return $order;
+		//Call the cancel subscription at gateway function
+		return $this->cancel_subscription_at_gateway( $order->subscription_transaction_id );
 	}
 
 	function pmprocb_return_api_response( $code ) {
@@ -626,5 +580,78 @@ class PMProGateway_CCBill extends PMProGateway {
 		//Convert $level->expiration_period + $level->expiration_number to a date.
 		$expiration_date = date( "Y-m-d", strtotime( "+ " . $level->expiration_number . " " . $level->expiration_period, current_time( "timestamp" ) ) );
 		return $expiration_date;
+	}
+
+	/**
+	 * Cancels a subscription in CCBill.
+	 *
+	 * @param PMPro_Subscription $subscription to cancel.
+	 * @return bool True if successful, false otherwise.
+	 * @since TBD
+	 */
+	function cancel_subscription( $subscription ) {
+		//get subscription id
+		$subscription_id = $subscription->get_subscription_transaction_id();
+		return $this->cancel_subscription_at_gateway( $subscription_id );
+	}
+
+	/**
+	 * Cancels a subscription at the gateway.
+	 *
+	 * @param String $subscription_id The subscription id of the subscription to cancel.
+	 * @return bool True if successful, false otherwise.
+	 * @since TBD
+	 */
+	function cancel_subscription_at_gateway( $subscription_id ) {
+		//build the URL
+		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
+
+		$qargs = array();
+		$qargs["action"]		= "cancelSubscription";
+		$qargs["clientSubacc"]	= '';
+		$qargs["usingSubacc"]	= get_option('pmpro_ccbill_subaccount_number');
+		$qargs["subscriptionId"] = $subscription_id;
+		$qargs["clientAccnum"]	= get_option('pmpro_ccbill_account_number');
+		$qargs["username"]		= get_option('pmpro_ccbill_datalink_username'); //must be provided by CCBill
+		$qargs["password"]		= get_option('pmpro_ccbill_datalink_password'); //must be provided by CCBill
+
+		$cancel_link	= add_query_arg( $qargs, $sms_link );
+		$response		= wp_remote_get( $cancel_link );
+
+		$response_code		= wp_remote_retrieve_response_code( $response );
+		$response_message	= wp_remote_retrieve_response_message( $response );
+
+		$cancel_error = '';
+
+		if ( 200 != $response_code && !empty( $response_message ) ) {
+			//return new WP_Error( $response_code, $response_message );
+			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $subscription_id );
+		} else if ( 200 != $response_code ) {
+			//Unknown Error Occurred
+			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $subscription_id );
+		} else {
+			$response_body = wp_remote_retrieve_body( $response );
+			$cancel_status = filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
+			if ( $cancel_status < 1 ) {
+				// A CCBill Error has occured. They need to contact CCBill
+				$error_code = $this->pmprocb_return_api_response( $cancel_status );
+				$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $subscription_id );
+			} else {
+				//success, let's return true
+				return true;
+			}
+		}
+
+		// We want to send an email if there is a cancellation error.
+		if ( ! empty( $cancel_error ) ) {
+			$pmproemail = new PMProEmail();
+			$body = '<p>' . $cancel_error . '</p>';
+			$pmproemail->template = 'pmpro_ccbill_cancel_error';
+			$pmproemail->subject = sprintf( __( 'Error cancelling subscription at %s', 'paid-memberships-pro' ), get_bloginfo( 'name' ) );
+			$pmproemail->data = array( 'body' => $body );
+			$pmproemail->sendEmail( get_option( 'admin_email' ) );
+		}
+
+		return false;
 	}
 }
