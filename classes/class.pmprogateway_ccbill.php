@@ -619,38 +619,37 @@ class PMProGateway_CCBill extends PMProGateway {
 		$response_code		= wp_remote_retrieve_response_code( $response );
 		$response_message	= wp_remote_retrieve_response_message( $response );
 
+		$cancel_error = '';
+
 		if ( 200 != $response_code && !empty( $response_message ) ) {
 			//return new WP_Error( $response_code, $response_message );
 			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $subscription_id );
-
-			$email = get_option("admin_email");
-
-			wp_mail( $email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error );
-
 		} else if ( 200 != $response_code ) {
-
 			//Unknown Error Occurred
 			$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation', 'pmpro-ccbill'), $subscription_id );
-
-			$email = get_option("admin_email");
-			wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
-
 		} else {
 			$response_body = wp_remote_retrieve_body( $response );
 			$cancel_status = filter_var($response_body, FILTER_SANITIZE_NUMBER_INT);
 			if ( $cancel_status < 1 ) {
+				// A CCBill Error has occured. They need to contact CCBill
 				$error_code = $this->pmprocb_return_api_response( $cancel_status );
-
-				//A CCBill Error has occured. They need to contact CCBill
 				$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $subscription_id );
-
-				$email = get_option("admin_email");
-				wp_mail($email, get_option("blogname") . __( ' CCBill Subscription Cancel Error', 'pmpro-ccbill' ), $cancel_error);
 			} else {
 				//success, let's return true
 				return true;
 			}
 		}
+
+		// We want to send an email if there is a cancellation error.
+		if ( ! empty( $cancel_error ) ) {
+			$pmproemail = new PMProEmail();
+			$body = '<p>' . $cancel_error . '</p>';
+			$pmproemail->template = 'pmpro_ccbill_cancel_error';
+			$pmproemail->subject = sprintf( __( 'Error cancelling subscription at %s', 'paid-memberships-pro' ), get_bloginfo( 'name' ) );
+			$pmproemail->data = array( 'body' => $body );
+			$pmproemail->sendEmail( get_option( 'admin_email' ) );
+		}
+
 		return false;
 	}
 }
