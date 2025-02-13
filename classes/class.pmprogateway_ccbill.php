@@ -269,6 +269,9 @@ class PMProGateway_CCBill extends PMProGateway {
 		$morder->user_id = $user_id;
 		$morder->saveOrder();
 
+		//Save checkout data in order meta before sending user offsite to pay.
+		pmpro_save_checkout_data_to_order( $morder );
+
 		//save discount code use
 		if ( ! empty( $discount_code_id ) ) {
 			$wpdb->query(
@@ -332,10 +335,11 @@ class PMProGateway_CCBill extends PMProGateway {
 		$order->payment_type = "CCBill";
 		$order->CardType = "";
 		$order->cardtype = "";
-		$order->status = "pending";
-		//do we still need to assign these above to the order ?
+		$order->status = "token";
+		$order->saveOrder();
 
 		self::pmpro_checkout_before_change_membership_level( $order->user_id, $order );
+
 		return true;
 	}
 
