@@ -38,10 +38,8 @@ class PMProGateway_CCBill extends PMProGateway {
 	}
 
 	static function pmpro_gateways_with_pending_status( $gateways ) {
-
 		$gateways[] = 'ccbill';
 		return $gateways;
-
 	}
 
 
@@ -118,6 +116,25 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		return $ready;
 
+	}
+
+	/**
+	 * Check whether or not a gateway supports a specific feature.
+	 *
+	 * @param string $feature The feature to check.
+	 * @return bool True if the gateway supports the feature, false if not.
+	 * @since TBD
+	 */
+	public static function supports( $feature ) {
+		$supports = array(
+			'subscription_sync' => true,
+		);
+
+		if ( empty( $supports[$feature] ) ) {
+			return false;
+		}
+
+		return $supports[$feature];
 	}
 
 	/**
@@ -797,22 +814,4 @@ class PMProGateway_CCBill extends PMProGateway {
 		$subscription->set( $update_array );
 	}
 
-	/**
-	 * Check whether or not a gateway supports a specific feature.
-	 *
-	 * @param string $feature The feature to check.
-	 * @return bool True if the gateway supports the feature, false if not.
-	 * @since TBD
-	 */
-	public static function supports( $feature ) {
-		$supports = array(
-			'subscription_sync' => true,
-		);
-
-		if ( empty( $supports[$feature] ) ) {
-			return false;
-		}
-
-		return $supports[$feature];
-	}
 }
