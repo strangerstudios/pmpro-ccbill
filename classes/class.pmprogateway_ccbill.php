@@ -624,8 +624,12 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		$qargs = array();
 		$qargs["action"]		= "cancelSubscription";
-		$qargs["clientSubacc"]	= '';
-		$qargs["usingSubacc"]	= get_option('pmpro_ccbill_subaccount_number');
+		// See if the site is using subaccount options, if so set the query args accordingly.
+		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
+		if ( ! empty( $client_sub_acc ) ) {
+			$qargs["clientSubacc"] = $client_subacc;
+			$qargs["usingSubacc"] = $client_subacc;
+		}
 		$qargs["subscriptionId"] = $subscription_id;
 		$qargs["clientAccnum"]	= get_option('pmpro_ccbill_account_number');
 		$qargs["username"]		= get_option('pmpro_ccbill_datalink_username'); //must be provided by CCBill
@@ -685,12 +689,18 @@ class PMProGateway_CCBill extends PMProGateway {
 		}
 
 		//build the URL
-		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi?";
+		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
 
 		$qargs = array();
 		$qargs["action"] = "viewSubscriptionStatus";
-		$qargs["clientSubacc"] = '';
-		$qargs["usingSubacc"] = get_option( 'pmpro_ccbill_subaccount_number' );
+
+		// See if the site is using subaccount options, if so set the query args accordingly.
+		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
+		if ( ! empty( $client_sub_acc ) ) {
+			$qargs["clientSubacc"] = $client_subacc;
+			$qargs["usingSubacc"] = $client_subacc;
+		}
+
 		$qargs["subscriptionId"] = $subscription->get_subscription_transaction_id();
 		$qargs["clientAccnum"] = get_option( 'pmpro_ccbill_account_number' );
 		$qargs["username"] = get_option( 'pmpro_ccbill_datalink_username' );
@@ -719,8 +729,6 @@ class PMProGateway_CCBill extends PMProGateway {
 			return __( 'Empty response from CCBill.', 'pmpro-ccbill' );
 		}
 
-
-		
 		/**
 		 * CCBill doesn't have a sandbox accountMock CSV response body, uncomment if need  test it.
 		 * Change values according to the test scenario you need.
@@ -746,7 +754,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		}
 
 		// Convert CSV data into an associative array
-		$data = array_combine($headers, $values);
+		$data = array_combine( $headers, $values );
 		//Bail if no results
 		if ( isset( $data['results'] ) && $data['results'] === "-1" ) {
 			return __( 'No data returned from CCBill.', 'pmpro-ccbill' );
