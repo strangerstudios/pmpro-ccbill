@@ -35,6 +35,10 @@ class PMProGateway_CCBill extends PMProGateway {
 			add_filter( 'pmpro_required_billing_fields', array( 'PMProGateway_CCBill', 'pmpro_required_billing_fields' ) );
 			add_filter( 'pmpro_checkout_default_submit_button', array( 'PMProGateway_CCBill', 'pmpro_checkout_default_submit_button' ) );
 		}
+		
+		add_filter( 'pmpro_allowed_refunds_gateways', array( 'PMProGateway_CCBill', 'allow_refunds' ), 10, 1 ); 
+		add_filter( 'pmpro_process_refund_ccbill', array( 'PMProGateway_CCBill', 'process_refund' ), 10, 2 );
+
 	}
 
 	static function pmpro_gateways_with_pending_status( $gateways ) {
@@ -57,6 +61,10 @@ class PMProGateway_CCBill extends PMProGateway {
 		return $gateways;
 	}
 
+	static function allow_refunds( $gateways ) {
+		$gateways[] = 'ccbill';
+		return $gateways;
+	}
 	/**
 	 * Get a list of payment options that the this gateway needs/supports.
 	 *
@@ -814,4 +822,79 @@ class PMProGateway_CCBill extends PMProGateway {
 		$subscription->set( $update_array );
 	}
 
+	/**
+	 * Functionality to process refunds for CCBill. This only supports full refunds.
+	 *
+	 * @param [type] $success
+	 * @param [type] $order
+	 * @return void
+	 */
+	static function process_refund( $success, $order ) {
+
+		if ( empty( $order->payment_transaction_id ) ) {
+			return false;
+		}
+
+		// Let's set success to false as a default.
+		$success = false;
+
+		$transaction_id = $order->payment_transaction_id;
+
+		$ccbill_url = 'https://datalink.ccbill.com/utils/subscriptionManagement.cgi';
+
+		$ccbill_args = array();
+		$ccbill_args['action'] = 'refundTransaction';
+		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
+		if ( ! empty( $client_sub_acc ) ) {
+			$ccbill_args['clientSubacc'] = $client_subacc;
+			$ccbill_args['usingSubacc'] = $client_subacc;
+		}
+		$ccbill_args['clientAccnum'] = get_option('pmpro_ccbill_account_number');
+		$ccbill_args['username'] = get_option('pmpro_ccbill_datalink_username');
+		$ccbill_args['password'] = get_option('pmpro_ccbill_datalink_password');
+		$ccbill_args['subscriptionId'] = $transaction_id; //CCBill refers to it as subscriptionId.
+
+		// Make the call to CCBill now.
+		$ccbill_url = add_query_arg( $ccbill_args, $ccbill_url );
+
+		$response = wp_remote_get( $ccbill_url );
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_message = wp_remote_retrieve_response_message( $response );
+
+		if ( $response_code !== 200 ) {
+			$order->notes = trim( $order->notes . ' ' . __( 'Admin: There was a problem processing the refund.', 'pmpro-ccbill' ) . ' ' . $response_message );
+			$order->SaveOrder();
+			return false;
+		}
+
+		$response_body = wp_remote_retrieve_body( $response );
+
+		$response_values = explode( "\n", trim( $response_body ) ); // Split by response_values
+		if ( count( $response_values ) < 2 ) {
+			return __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' );
+		}
+
+		// Strip out additional double quotation marks so we can cast to an int to compare.
+		$return_value = (int) str_replace( '"', '', $response_values[1] );
+
+		// Refund was successful lets send an email.
+		if ( intval( $return_value ) === 1 ) {
+			$success = true;
+			$order->status = 'refunded';
+			//send an email to the member
+			$myemail = new PMProEmail();
+			$myemail->sendRefundedEmail( $user, $order );
+
+			//send an email to the admin
+			$myemail = new PMProEmail();
+			$myemail->sendRefundedAdminEmail( $user, $order );
+		} else {
+			$order->notes = trim( $order->notes . ' ' . __( 'Admin: We encountered an issue processing the refund. Please review it in CCBill and complete the refund there.', 'pmpro-ccbill' ));
+		}
+
+		$order->SaveOrder();
+
+		return $success;
+	}
 }
