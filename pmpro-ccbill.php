@@ -1,14 +1,16 @@
 <?php
-/*
-Plugin Name: Paid Memberships Pro - CCBill Gateway
-Plugin URI: https://www.paidmembershipspro.com/add-ons/ccbill
-Description: PMPro Gateway integration for CCBill
-Version: 0.5.1
-Author: Paid Memberships Pro
-Author URI: https://www.paidmembershipspro.com
-Text Domain: pmpro-ccbill
-Domain Path: /languages
-*/
+/**
+ * Plugin Name: Paid Memberships Pro - CCBill Gateway
+ * Plugin URI: https://www.paidmembershipspro.com/add-ons/ccbill
+ * Description: PMPro Gateway integration for CCBill
+ * Version: 0.5.1
+ * Author: Paid Memberships Pro
+ * Author URI: https://www.paidmembershipspro.com
+ * Text Domain: pmpro-ccbill
+ * Domain Path: /languages
+ * License: GPL-3.0+
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ */
 
 define( "PMPRO_CCBILL_DIR", dirname( __FILE__ ) );
 
