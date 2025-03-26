@@ -1,4 +1,4 @@
-<!-- ![](pmpro-sample-banner.png) -->
+![](pmpro-ccbill-banner.png)
 
 # [Paid Memberships Pro - CCBill Gateway Integration](https://www.paidmembershipspro.com/add-ons/ccbill/) #
 
