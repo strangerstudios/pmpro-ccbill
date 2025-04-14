@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
 Requires at least: 5.5
-Tested up to: 6.6
-Stable tag: 0.5.1
+Tested up to: 6.8
+Stable tag: 1.0
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,13 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.0 - 2025-04-14 =
+* ENHANCEMENT: Added refund logic for CCBill. This allows you to process refunds directly from the Paid Memberships Pro dashboard.
+* ENHANCEMENT: Added support for "Sync with Gateway" functionality.
+* BUG FIX: Fixed an issue where cancellations would always cancel immediately. This now correctly gives the member the remaining days of their membership when cancelling.
+* BUG FIX: Fixed minor warnings for PHP 8.0+ environments.
+* REFACTOR: Refactored Add On code to work how other gateways work and utilize the newer Paid Memberships Pro codebase.
+
 = 0.5.1 - 2024-08-14 =
 * BUG FIX: Fixed an issue where recurring orders would show an incorrect date. (Thanks @misfist)
 
