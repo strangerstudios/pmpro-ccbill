@@ -35,7 +35,7 @@ switch ( $event_type ) {
 		$morder = new MemberOrder( $order_id );
 
 		//run the function to complete checkout
-		if ( pmpro_complete_checkout( $morder ) ) {
+		if ( pmpro_ccbill_ChangeMembershipLevel( $morder ) ) {
 			//Log the event
 			pmpro_ccbill_webhook_log( sprintf( __( "Checkout processed (%s) success!", 'pmpro_ccbill'), $morder->code ) );
 		}
@@ -74,154 +74,15 @@ switch ( $event_type ) {
 	break;	
 }
 
-
 /**
- *  Change Membership Level for CCBill. Deprecated,use pmpro_complete_checkout instead.
- *
- * @param  array $response
- * @param  MemberOrder $morder
+ *  Change Membership Level for CCBill.
+ * * @param  MemberOrder $morder
  * @return bool
- * @since TBD
- * @deprecated TBD
+ * @since 0.1
  */
-function pmpro_ccbill_ChangeMembershipLevel( $response, $morder ) {
-	//show deprecated message
-	_deprecated_function( __FUNCTION__, 'TBD', 'pmpro_complete_checkout' );
-
-	//filter for level
-	$morder->membership_level = apply_filters( "pmpro_ccbill_handler_level", $morder->membership_level, $morder->user_id );
-	
-	//set the start date to current_time('mysql') but allow filters (documented in preheaders/checkout.php)
-	$startdate = apply_filters( "pmpro_checkout_start_date", "'" . current_time('mysql') . "'", $morder->user_id, $morder->membership_level );
-	//fix expiration date
-	
-	if ( ! empty( $morder->membership_level->expiration_number ) ) {
-
-		$enddate = "'" . date_i18n("Y-m-d", strtotime("+ " . $morder->membership_level->expiration_number . " " . $morder->membership_level->expiration_period, current_time("timestamp"))) . "'";
-	} else {
-		$enddate = "NULL";
-	}
-
-	//filter the enddate (documented in preheaders/checkout.php)
-	$enddate = apply_filters("pmpro_checkout_end_date", $enddate, $morder->user_id, $morder->membership_level, $startdate);
-	
-	//get discount code
-	$morder->getDiscountCode();
-	if ( ! empty( $morder->discount_code ) ) {
-		//update membership level
-		$morder->getMembershipLevel(true);
-		$discount_code_id = $morder->discount_code->id;
-	} else {
-		$discount_code_id = "";
-	}
-		
-	//custom level to change user to
-	$custom_level = array(
-		'user_id' => $morder->user_id,
-		'membership_id' => $morder->membership_level->id,
-		'code_id' => $discount_code_id,
-		'initial_payment' => $morder->membership_level->initial_payment,
-		'billing_amount' => $morder->membership_level->billing_amount,
-		'cycle_number' => $morder->membership_level->cycle_number,
-		'cycle_period' => $morder->membership_level->cycle_period,
-		'billing_limit' => $morder->membership_level->billing_limit,
-		'trial_amount' => $morder->membership_level->trial_amount,
-		'trial_limit' => $morder->membership_level->trial_limit,
-		'startdate' => $startdate,
-		'enddate' => $enddate);
-	
-	global $pmpro_error;
-	
-	if ( ! empty( $pmpro_error ) ) {
-		echo $pmpro_error;
-		pmpro_ccbill_webhook_log($pmpro_error);
-	}
-
-	if ( pmpro_changeMembershipLevel($custom_level, $morder->user_id) !== false ) {
-
-		$txn_id = sanitize_text_field( $response['transactionId'] );
-		$sub_id = sanitize_text_field( $response['subscriptionId'] );
-		$card_type = sanitize_text_field( $response['cardType'] );
-		$card_num = sanitize_text_field( $response['last4'] );
-		$card_exp = sanitize_text_field( $response['expDate'] );
-		
-		$card_exp_month = substr($card_exp, 0, 2);
-		$card_exp_year = '20'.substr($card_exp, 2);
-		
-		//update order status and transaction ids
-		$morder->status = "success";
-
-		$morder->payment_transaction_id = $txn_id;
-		if ( intval( $response['recurringPeriod'] ) !== 0 ) {
-			$morder->subscription_transaction_id = $sub_id;
-		}
-		$morder->cardtype = $card_type;
-		$morder->accountnumber = 'XXXXXXXXXXXX'.$card_num;
-		$morder->expirationmonth = $card_exp_month;
-		$morder->expirationyear = $card_exp_year;
-		
-		$morder->saveOrder();
-		
-		//add discount code use
-		if ( ! empty( $discount_code ) && !empty( $use_discount_code ) ) {
-
-			$wpdb->prepare(
-					"INSERT INTO {$wpdb->pmpro_discount_codes_uses} 
-						( code_id, user_id, order_id, timestamp ) 
-						VALUES( %d, %d, %s, %s )",
-				$discount_code_id,
-				$morder->user_id,
-				$morder->id,
-				current_time( 'mysql' )
-			);
-		}
-
-		//save first and last name fields
-		if ( ! empty( $_POST['firstName'] ) ) {
-			$old_firstname = get_user_meta( $morder->user_id, "first_name", true );
-			if ( ! empty( $old_firstname ) ) {
-				update_user_meta( $morder->user_id, "first_name", sanitize_text_field( $_POST['firstName'] ) );
-			}
-		}
-
-		if ( ! empty( $_POST['lastName'] ) ) {
-			$old_lastname = get_user_meta( $morder->user_id, "last_name", true );
-		
-			if( ! empty( $old_lastname ) ) {
-				update_user_meta( $morder->user_id, "last_name", sanitize_text_field( $_POST['lastName'] ) );
-			}
-		}
-
-		//hook
-		do_action( "pmpro_after_checkout", $morder->user_id, $morder );
-
-		//setup some values for the emails
-		if ( ! empty( $morder ) ){
-			$invoice = new MemberOrder($morder->id);
-		} else {
-			$invoice = NULL;
-		}
-		
-		pmpro_ccbill_webhook_log( ( __( "CHANGEMEMBERSHIPLEVEL: ORDER: ", 'pmpro-ccbill' ) . var_export($morder, true) . "\n---\n"));
-		
-		$user = get_userdata($morder->user_id);
-
-		if ( empty( $user ) ) {
-			return false;
-		}
-
-		$user->membership_level = $morder->membership_level;		//make sure they have the right level info
-		//send email to member
-		$pmproemail = new PMProEmail();
-		$pmproemail->sendCheckoutEmail($user, $invoice);
-		//send email to admin
-		$pmproemail = new PMProEmail();
-		$pmproemail->sendCheckoutAdminEmail($user, $invoice);
-		return true;
-	} else {
-		return false;	
-	}
-
+function pmpro_ccbill_ChangeMembershipLevel( $morder ) {
+	pmpro_pull_checkout_data_from_order( $morder );
+ 	return pmpro_complete_async_checkout( $morder );
 }
 
 /**
