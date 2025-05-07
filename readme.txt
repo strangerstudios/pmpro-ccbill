@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 1.0
+Stable tag: 1.1
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,10 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.1 - 2025-05-07 =
+* BUG FIX: Fixed an issue where checkout would not complete orders from "token" status even if payments are successful.
+* BUG FIX: Better supported sandbox mode checkouts to work with subscriptions and one-time payments.
+
 = 1.0 - 2025-04-14 =
 * ENHANCEMENT: Added refund logic for CCBill. This allows you to process refunds directly from the Paid Memberships Pro dashboard.
 * ENHANCEMENT: Added support for "Sync with Gateway" functionality.
