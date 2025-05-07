@@ -33,9 +33,15 @@ switch ( $event_type ) {
 		$order_id = sanitize_text_field( $response['X-pmpro_orderid'] );
 		$morder = new MemberOrder( $order_id );
 
-		// Let's save the order data that's needed here.
-		$morder->subscription_transaction_id = sanitize_text_field( $response['subscriptionId'] ) ?? '';
-		$morder->payment_transaction_id = sanitize_text_field( $response['transactionId'] ) ?? '';
+		// Let's save the order data that may be needed. Ensure that there is a recurring amount passed in, sandbox passes this even for one-time payments.
+		if ( ! empty( $response['subscriptionId'] ) && (  isset( $response['subscriptionRecurringPrice'] ) && intval( $response['subscriptionRecurringPrice'] ) > 0 ) ) {
+			$morder->subscription_transaction_id = sanitize_text_field( $response['subscriptionId'] );
+		}
+
+		if ( ! empty( $response['transactionId'] ) ) {
+			$morder->payment_transaction_id = sanitize_text_field( $response['transactionId'] );
+		}
+
 		$morder->saveOrder();
 
 		//run the function to complete checkout
