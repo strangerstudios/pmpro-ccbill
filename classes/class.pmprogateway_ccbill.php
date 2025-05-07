@@ -665,7 +665,7 @@ class PMProGateway_CCBill extends PMProGateway {
 			if ( $cancel_status < 1 ) {
 				// A CCBill Error has occured. They need to contact CCBill
 				$error_code = $this->pmprocb_return_api_response( $cancel_status );
-				$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $subscription_id );
+				$cancel_error = sprintf( __( 'Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s', 'pmpro-ccbill'), $subscription_id, $error_code );
 			} else {
 				//success, let's return true
 				return true;
@@ -685,7 +685,8 @@ class PMProGateway_CCBill extends PMProGateway {
 		return false;
 	}
 
-	/** Pull subscription status from CCBill
+	/** 
+	 * Pull subscription status from CCBill
 	 *
 	 * @param PMPro_Subscription $subscription The subscription object.
 	 * @return string|null Error message is returned if update fails.

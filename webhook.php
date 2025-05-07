@@ -30,9 +30,13 @@ if ( empty( $response['clientAccnum'] ) || $response['clientAccnum'] !== get_opt
 switch ( $event_type ) {
 
 	case 'NewSaleSuccess':
-
 		$order_id = sanitize_text_field( $response['X-pmpro_orderid'] );
 		$morder = new MemberOrder( $order_id );
+
+		// Let's save the order data that's needed here.
+		$morder->subscription_transaction_id = sanitize_text_field( $response['subscriptionId'] ) ?? '';
+		$morder->payment_transaction_id = sanitize_text_field( $response['transactionId'] ) ?? '';
+		$morder->saveOrder();
 
 		//run the function to complete checkout
 		if ( pmpro_ccbill_ChangeMembershipLevel( $morder ) ) {
@@ -250,7 +254,6 @@ function pmpro_ccbill_webhook_log( $s ) {
 */
 function pmpro_ccbill_Exit( $redirect = false ) {
 	global $logstr;
-	//echo $logstr;
 	$logstr = var_export( $_REQUEST, true ) . sprintf( __( 'Logged On: %s', 'pmpro-ccbill' ), date_i18n("m/d/Y H:i:s") ) . "\n" . $logstr . "\n-------------\n";
 	//log in file or email?
 	if ( defined( 'PMPRO_CCBILL_DEBUG' ) && PMPRO_CCBILL_DEBUG === 'log' ) {
