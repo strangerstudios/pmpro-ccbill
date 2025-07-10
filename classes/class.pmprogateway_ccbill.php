@@ -145,12 +145,132 @@ class PMProGateway_CCBill extends PMProGateway {
 		return $supports[$feature];
 	}
 
+    /**
+     * Displays fields for the gateway options for versions prior to 3.5
+     * 
+     * @since TBD
+     */
+    static function pmpro_payment_options_backwards_compat(){
+
+        if ( version_compare( PMPRO_VERSION, '3.5', '<' ) ) {
+            /**
+             * The previous version of loading the setting has been adjusted. 
+             * Keeping this function for any custom code (such as function exist checks etc.)
+             */            
+            add_action( 'pmpro_payment_option_fields', array( 'PMProGateway_CCBill', 'pmpro_payment_option_fields' ), 10, 2 );
+        }
+
+    }
+
+    /**
+     * Display fields for this gateway's options
+     * 
+     * @since TBD
+     */
+    static function show_settings_fields() {
+
+        ?>
+        <p>
+            <?php
+                printf(
+                    /* translators: %s: URL to the PayPal Express gateway documentation. */
+                    esc_html__( 'For detailed setup instructions, please visit our %s.', 'paid-memberships-pro' ),
+                    '<a href="https://www.paidmembershipspro.com/add-ons/ccbill/?utm_source=plugin&utm_medium=pmpro-paymentsettings&utm_campaign=documentation&utm_content=pmpro-payfast-documentation" target="_blank">' . esc_html__( 'CCBill documentation', 'paid-memberships-pro' ) . '</a>'
+                );
+            ?>
+        </p>
+        <div class="notice notice-large notice-warning inline">
+            <p class="pmpro_ccbill_notice">
+                <strong><?php esc_html_e( 'Paid Memberships Pro: CCBill is currently in Beta.', 'pmpro-ccbill' ); ?></strong><br />								
+                <a href="https://www.paidmembershipspro.com/add-ons/ccbill/" target="_blank"><?php esc_html_e( 'Read the documentation on getting started with Paid Memberships Pro CCBill &raquo;', 'pmpro-ccbill' ); ?></a>
+            </p>
+        </div>
+        <div id="pmpro_ccbill" class="pmpro_section" data-visibility="shown" data-activated="true">
+            <div class="pmpro_section_toggle">
+                <button class="pmpro_section-toggle-button" type="button" aria-expanded="true">
+                    <span class="dashicons dashicons-arrow-up-alt2"></span>
+                    <?php esc_html_e( 'Settings', 'paid-memberships-pro' ); ?>
+                </button>
+            </div>
+            <div class="pmpro_section_inside">
+                <table class='form-table'>
+                    <tbody>                                     
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label for="ccbill_account_number"><?php esc_html_e( 'Client Account Number', 'pmpro-ccbill' ); ?>:</label>
+                            </th>
+                            <td>
+                                <input type="text" id="ccbill_account_number" name="ccbill_account_number" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_account_number' ) ); ?>" class="regular-text code" />
+                                <br /><small><?php esc_html_e( 'Enter the client account number from CCBill', 'pmpro-ccbill' ); ?></small>
+                            </td>
+                        </tr>
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label for="ccbill_subaccount_number"><?php esc_html_e( 'Client SubAccount Number', 'pmpro-ccbill' ); ?>:</label>
+                            </th>
+                            <td>
+                                <input type="text" id="ccbill_subaccount_number" name="ccbill_subaccount_number" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_subaccount_number' ) ); ?>" />
+                                <br /><small><?php esc_html_e( 'SubAccount Number You will be using', 'pmpro-ccbill' );?></small>
+                            </td>
+                        </tr>
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label for="ccbill_datalink_username"><?php esc_html_e( 'Datalink Username', 'pmpro-ccbill' ); ?>:</label>
+                            </th>
+                            <td>
+                                <input type="text" id="ccbill_datalink_username" name="ccbill_datalink_username" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_datalink_username' ) ); ?>" />
+                                <br /><small><?php esc_html_e( 'Datalink username. This is different than your login username. Contact CCBill for more information.', 'pmpro-ccbill'); ?></small>
+                            </td>
+                        </tr>
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label for="ccbill_datalink_password"><?php esc_html_e( 'Datalink Password', 'pmpro-ccbill' ); ?>:</label>
+                            </th>
+                            <td>
+                                <input type="text" id="ccbill_datalink_password" name="ccbill_datalink_password" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_datalink_password' ) ); ?>" />
+                                <br /><small><?php esc_html_e( 'Datalink pasword. This is different than your login password. Contact CCBill for more information.', 'pmpro-ccbill' ); ?></small>
+                            </td>
+                        </tr>
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label for="ccbill_flex_form_id"><?php esc_html_e( 'Flex Form ID', 'pmpro-ccbill' );?>:</label>
+                            </th>
+                            <td>
+                                <input type="text" name="ccbill_flex_form_id" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_flex_form_id' ) ); ?>" />
+                                <br /><small><?php esc_html_e( 'Enter the Flex Form ID from CCBill you will be using. Note you may need to have CCBill enable Dynamic Pricing', 'pmpro-ccbill' ); ?></small>
+                            </td>
+                        </tr>
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label for="ccbill_salt"><?php esc_html_e( 'Salt', 'pmpro-ccbill' ); ?>:</label>
+                            </th>
+                            <td>
+                                <input type="text" name="ccbill_salt" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_salt' ) ); ?>" />
+                                <br /><small><?php esc_html_e( 'Salt value must be provided by CCBill', 'pmpro-ccbill' ); ?></small>
+                            </td>
+                        </tr>
+                        <tr class="gateway gateway_ccbill">
+                            <th scope="row" valign="top">
+                                <label><?php esc_html_e( 'CCBill Webhook URL', 'pmpro-ccbill' ); ?>:</label>
+                            </th>
+                            <td>
+                                <p><?php esc_html_e( 'To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' ); ?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook"); ?></pre></p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php
+    }
+
 	/**
 	 * Display fields for this gateway's options.
 	 *
 	 * @since 1.8
 	 */
 	static function pmpro_payment_option_fields( $values, $gateway ) {
+        _deprecated_function( __METHOD__, '3.5' );
 	?>
 	<tr class="pmpro_settings_divider gateway gateway_ccbill" <?php if( $gateway != "ccbill" ) { ?>style="display: none;"<?php } ?> >
 		<td colspan="2">
