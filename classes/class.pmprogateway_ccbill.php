@@ -243,22 +243,32 @@ class PMProGateway_CCBill extends PMProGateway {
 	 * @since TBD
 	 */
 	public static function save_settings_fields() {
-			$settings_to_save = array(
-				'ccbill_account_number',
-				'ccbill_subaccount_number',
-				'ccbill_datalink_username',
-				'ccbill_datalink_password',
-				'ccbill_flex_form_id',
-				'ccbill_salt'
-			);
+		$settings_to_save = array(
+			'ccbill_account_number',
+			'ccbill_subaccount_number',
+			'ccbill_datalink_username',
+			'ccbill_datalink_password',
+			'ccbill_flex_form_id',
+			'ccbill_salt'
+		);
 
-			foreach ( $settings_to_save as $setting ) {
-				if ( isset( $_REQUEST[ $setting ] ) ) {
-					update_option( 'pmpro_' . $setting, sanitize_text_field( $_REQUEST[ $setting ] ) );
-				}
+		foreach ( $settings_to_save as $setting ) {
+			if ( isset( $_REQUEST[ $setting ] ) ) {
+				update_option( 'pmpro_' . $setting, sanitize_text_field( $_REQUEST[ $setting ] ) );
 			}
 		}
+	}
 
+	/**
+	 * Get a description for this gateway.
+	 *
+	 * @since TBD
+	 *
+	 * @return string
+	 */
+	public static function get_description_for_gateway_settings() {
+		return esc_html__( 'CCBill is a global payment gateway that enables online businesses to accept credit card, debit card, and ACH payments while offering built-in fraud protection, subscription billing management, and compliance with international regulations.', 'pmpro-ccbill' );
+	}
 
 	/**
 	 * Display fields for this gateway's options.
