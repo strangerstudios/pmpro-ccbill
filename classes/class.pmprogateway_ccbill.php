@@ -146,11 +146,137 @@ class PMProGateway_CCBill extends PMProGateway {
 	}
 
 	/**
+	 * Display fields for this gateway's options
+	 * 
+	 * @since TBD
+	 */
+	static function show_settings_fields() {
+		?>
+		<div class="notice notice-large notice-warning inline">
+			<p class="pmpro_ccbill_notice">
+				<strong><?php esc_html_e( 'Paid Memberships Pro: CCBill is currently in Beta.', 'pmpro-ccbill' ); ?></strong><br />								
+				<a href="https://www.paidmembershipspro.com/add-ons/ccbill/" target="_blank"><?php esc_html_e( 'Read the documentation on getting started with Paid Memberships Pro CCBill &raquo;', 'pmpro-ccbill' ); ?></a>
+			</p>
+		</div>
+		<div id="pmpro_ccbill" class="pmpro_section" data-visibility="shown" data-activated="true">
+			<div class="pmpro_section_toggle">
+				<button class="pmpro_section-toggle-button" type="button" aria-expanded="true">
+					<span class="dashicons dashicons-arrow-up-alt2"></span>
+					<?php esc_html_e( 'Settings', 'pmpro-ccbill' ); ?>
+				</button>
+			</div>
+			<div class="pmpro_section_inside">
+				<table class='form-table'>
+					<tbody>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label for="ccbill_account_number"><?php esc_html_e( 'Client Account Number', 'pmpro-ccbill' ); ?>:</label>
+							</th>
+							<td>
+								<input type="text" id="ccbill_account_number" name="ccbill_account_number" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_account_number' ) ); ?>" class="regular-text code" />
+								<br /><small><?php esc_html_e( 'Enter the client account number from CCBill', 'pmpro-ccbill' ); ?></small>
+							</td>
+						</tr>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label for="ccbill_subaccount_number"><?php esc_html_e( 'Client SubAccount Number', 'pmpro-ccbill' ); ?>:</label>
+							</th>
+							<td>
+								<input type="text" id="ccbill_subaccount_number" name="ccbill_subaccount_number" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_subaccount_number' ) ); ?>" />
+								<br /><small><?php esc_html_e( 'SubAccount Number You will be using', 'pmpro-ccbill' );?></small>
+							</td>
+						</tr>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label for="ccbill_datalink_username"><?php esc_html_e( 'Datalink Username', 'pmpro-ccbill' ); ?>:</label>
+							</th>
+							<td>
+								<input type="text" id="ccbill_datalink_username" name="ccbill_datalink_username" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_datalink_username' ) ); ?>" />
+								<br /><small><?php esc_html_e( 'Datalink username. This is different than your login username. Contact CCBill for more information.', 'pmpro-ccbill'); ?></small>
+							</td>
+						</tr>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label for="ccbill_datalink_password"><?php esc_html_e( 'Datalink Password', 'pmpro-ccbill' ); ?>:</label>
+							</th>
+							<td>
+								<input type="text" id="ccbill_datalink_password" name="ccbill_datalink_password" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_datalink_password' ) ); ?>" />
+								<br /><small><?php esc_html_e( 'Datalink pasword. This is different than your login password. Contact CCBill for more information.', 'pmpro-ccbill' ); ?></small>
+							</td>
+						</tr>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label for="ccbill_flex_form_id"><?php esc_html_e( 'Flex Form ID', 'pmpro-ccbill' );?>:</label>
+							</th>
+							<td>
+								<input type="text" name="ccbill_flex_form_id" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_flex_form_id' ) ); ?>" />
+								<br /><small><?php esc_html_e( 'Enter the Flex Form ID from CCBill you will be using. Note you may need to have CCBill enable Dynamic Pricing', 'pmpro-ccbill' ); ?></small>
+							</td>
+						</tr>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label for="ccbill_salt"><?php esc_html_e( 'Salt', 'pmpro-ccbill' ); ?>:</label>
+							</th>
+							<td>
+								<input type="text" name="ccbill_salt" size="60" value="<?php echo esc_attr( get_option( 'pmpro_ccbill_salt' ) ); ?>" />
+								<br /><small><?php esc_html_e( 'Salt value must be provided by CCBill', 'pmpro-ccbill' ); ?></small>
+							</td>
+						</tr>
+						<tr class="gateway gateway_ccbill">
+							<th scope="row" valign="top">
+								<label><?php esc_html_e( 'CCBill Webhook URL', 'pmpro-ccbill' ); ?>:</label>
+							</th>
+							<td>
+								<p><?php esc_html_e( 'To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' ); ?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook"); ?></pre></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<?php
+	}
+	
+	/**
+	 * Save the payment gateway settings fields for PMPro V3.5+.
+	 * 
+	 * @since TBD
+	 */
+	public static function save_settings_fields() {
+		$settings_to_save = array(
+			'ccbill_account_number',
+			'ccbill_subaccount_number',
+			'ccbill_datalink_username',
+			'ccbill_datalink_password',
+			'ccbill_flex_form_id',
+			'ccbill_salt'
+		);
+
+		foreach ( $settings_to_save as $setting ) {
+			if ( isset( $_REQUEST[ $setting ] ) ) {
+				update_option( 'pmpro_' . $setting, sanitize_text_field( $_REQUEST[ $setting ] ) );
+			}
+		}
+	}
+
+	/**
+	 * Get a description for this gateway.
+	 *
+	 * @since TBD
+	 *
+	 * @return string
+	 */
+	public static function get_description_for_gateway_settings() {
+		return esc_html__( 'CCBill is a global payment gateway that enables online businesses to accept credit card, debit card, and ACH payments while offering built-in fraud protection, subscription billing management, and compliance with international regulations.', 'pmpro-ccbill' );
+	}
+
+	/**
 	 * Display fields for this gateway's options.
 	 *
 	 * @since 1.8
 	 */
 	static function pmpro_payment_option_fields( $values, $gateway ) {
+        _deprecated_function( __METHOD__, '3.5' );
 	?>
 	<tr class="pmpro_settings_divider gateway gateway_ccbill" <?php if( $gateway != "ccbill" ) { ?>style="display: none;"<?php } ?> >
 		<td colspan="2">
@@ -677,7 +803,7 @@ class PMProGateway_CCBill extends PMProGateway {
 			$pmproemail = new PMProEmail();
 			$body = '<p>' . $cancel_error . '</p>';
 			$pmproemail->template = 'pmpro_ccbill_cancel_error';
-			$pmproemail->subject = sprintf( __( 'Error cancelling subscription at %s', 'paid-memberships-pro' ), get_bloginfo( 'name' ) );
+			$pmproemail->subject = sprintf( __( 'Error cancelling subscription at %s', 'pmpro-ccbill' ), get_bloginfo( 'name' ) );
 			$pmproemail->data = array( 'body' => $body );
 			$pmproemail->sendEmail( get_option( 'admin_email' ) );
 		}
