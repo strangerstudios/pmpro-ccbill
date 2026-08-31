@@ -33,6 +33,8 @@ switch ( $event_type ) {
 		$order_id = sanitize_text_field( $response['X-pmpro_orderid'] );
 		$morder = new MemberOrder( $order_id );
 
+		pmpro_ccbill_webhook_log( sprintf( 'NewSaleSuccess received. X-pmpro_orderid: %s, Loaded order ID: %s, Loaded order user_id: %s', $order_id, $morder->id, $morder->user_id ) );
+
 		// Let's save the order data that may be needed. Ensure that there is a recurring amount passed in, sandbox passes this even for one-time payments.
 		if ( ! empty( $response['subscriptionId'] ) && (  isset( $response['subscriptionRecurringPrice'] ) && intval( $response['subscriptionRecurringPrice'] ) > 0 ) ) {
 			$morder->subscription_transaction_id = sanitize_text_field( $response['subscriptionId'] );
@@ -45,13 +47,24 @@ switch ( $event_type ) {
 		$morder->saveOrder();
 
 		//run the function to complete checkout
-		if ( pmpro_ccbill_ChangeMembershipLevel( $morder ) ) {
+		if ( pmpro_ccbill_ChangeMembershipLevel( $morder, $response ) ) {
 			//Log the event
 			pmpro_ccbill_webhook_log( sprintf( __( "Checkout processed (%s) success!", 'pmpro_ccbill'), $morder->code ) );
+		} else {
+			// Log everything we have so a lost membership level is diagnosable after the fact.
+			pmpro_ccbill_webhook_log( sprintf(
+				'Checkout FAILED to assign a membership level. Order ID: %s, code: %s, user_id: %s, membership_id: %s, X-pmpro_levelid: %s. Full response: %s',
+				$morder->id,
+				$morder->code,
+				$morder->user_id,
+				$morder->membership_id,
+				isset( $response['X-pmpro_levelid'] ) ? $response['X-pmpro_levelid'] : '(not set)',
+				wp_json_encode( $response )
+			) );
 		}
 
 		pmpro_ccbill_Exit();
-		
+
 	break;
 
 	case 'Expiration':
@@ -87,11 +100,32 @@ switch ( $event_type ) {
 /**
  *  Change Membership Level for CCBill.
  * * @param  MemberOrder $morder
+ * @param  array        $response The sanitized webhook postback data.
  * @return bool
  * @since 0.1
  */
-function pmpro_ccbill_ChangeMembershipLevel( $morder ) {
+function pmpro_ccbill_ChangeMembershipLevel( $morder, $response = array() ) {
+	global $pmpro_level;
+
 	pmpro_pull_checkout_data_from_order( $morder );
+
+	// If the checkout_level order meta wasn't found (e.g. the order ID CCBill echoed back
+	// didn't match the order that meta was saved against), fall back to the level ID we
+	// also sent CCBill directly as a custom field, so we don't lose the level entirely.
+	if ( empty( $pmpro_level->id ) && ! empty( $response['X-pmpro_levelid'] ) ) {
+		$fallback_level = pmpro_getLevel( intval( $response['X-pmpro_levelid'] ) );
+
+		if ( ! empty( $fallback_level ) ) {
+			pmpro_ccbill_webhook_log( sprintf( 'checkout_level order meta was missing for order #%s. Falling back to X-pmpro_levelid = %s.', $morder->id, $response['X-pmpro_levelid'] ) );
+			$pmpro_level = $fallback_level;
+		}
+	}
+
+	if ( empty( $pmpro_level->id ) ) {
+		pmpro_ccbill_webhook_log( sprintf( 'No membership level could be determined for order #%s (user #%s). Aborting level change.', $morder->id, $morder->user_id ) );
+		return false;
+	}
+
  	return pmpro_complete_async_checkout( $morder );
 }
 

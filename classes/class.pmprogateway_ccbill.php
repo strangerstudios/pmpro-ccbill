@@ -608,15 +608,17 @@ class PMProGateway_CCBill extends PMProGateway {
 			$ccbill_args['initialPeriod'] = $this->get_initialPeriod( $order );
 			$ccbill_args['formDigest'] = $this->get_digest( $initial_payment_amount, $ccbill_args['initialPeriod'], $currency_code, $recurring_price, $recurring_period, $number_of_rebills );
 			$ccbill_args['pmpro_orderid'] = $order->id;
+			$ccbill_args['pmpro_levelid'] = $level->id;
 			$ccbill_args['email'] = $bemail;
-		
-		} else {	
+
+		} else {
 
 			// Non-recurring membership
 			$ccbill_args['initialPrice'] = number_format( $initial_payment_amount, 2, ".", "" );
 			$ccbill_args['initialPeriod'] = $this->get_initialPeriod( $order );
 			$ccbill_args['formDigest'] = $this->get_digest( $initial_payment_amount, $ccbill_args['initialPeriod'], $currency_code );
 			$ccbill_args['pmpro_orderid'] = $order->id;
+			$ccbill_args['pmpro_levelid'] = $level->id;
 			$ccbill_args['email'] = $bemail;
 		}
 
