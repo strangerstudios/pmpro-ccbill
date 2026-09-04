@@ -51,15 +51,14 @@ switch ( $event_type ) {
 			//Log the event
 			pmpro_ccbill_webhook_log( sprintf( __( "Checkout processed (%s) success!", 'pmpro_ccbill'), $morder->code ) );
 		} else {
-			// Log everything we have so a lost membership level is diagnosable after the fact.
+			// Named fields for a quick diagnosis; pmpro_ccbill_Exit() already dumps the full $_REQUEST below.
 			pmpro_ccbill_webhook_log( sprintf(
-				'Checkout FAILED to assign a membership level. Order ID: %s, code: %s, user_id: %s, membership_id: %s, X-pmpro_levelid: %s. Full response: %s',
+				'Checkout FAILED to assign a membership level. Order ID: %s, code: %s, user_id: %s, membership_id: %s, X-pmpro_levelid: %s.',
 				$morder->id,
 				$morder->code,
 				$morder->user_id,
 				$morder->membership_id,
-				isset( $response['X-pmpro_levelid'] ) ? $response['X-pmpro_levelid'] : '(not set)',
-				wp_json_encode( $response )
+				isset( $response['X-pmpro_levelid'] ) ? $response['X-pmpro_levelid'] : '(not set)'
 			) );
 		}
 
