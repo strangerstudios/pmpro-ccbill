@@ -33,6 +33,8 @@ switch ( $event_type ) {
 		$order_id = sanitize_text_field( $response['X-pmpro_orderid'] );
 		$morder = new MemberOrder( $order_id );
 
+		pmpro_ccbill_webhook_log( sprintf( 'NewSaleSuccess received. X-pmpro_orderid: %s, Loaded order ID: %s, Loaded order user_id: %s', $order_id, $morder->id, $morder->user_id ) );
+
 		// Let's save the order data that may be needed. Ensure that there is a recurring amount passed in, sandbox passes this even for one-time payments.
 		if ( ! empty( $response['subscriptionId'] ) && (  isset( $response['subscriptionRecurringPrice'] ) && intval( $response['subscriptionRecurringPrice'] ) > 0 ) ) {
 			$morder->subscription_transaction_id = sanitize_text_field( $response['subscriptionId'] );
@@ -45,13 +47,23 @@ switch ( $event_type ) {
 		$morder->saveOrder();
 
 		//run the function to complete checkout
-		if ( pmpro_ccbill_ChangeMembershipLevel( $morder ) ) {
+		if ( pmpro_ccbill_ChangeMembershipLevel( $morder, $response ) ) {
 			//Log the event
 			pmpro_ccbill_webhook_log( sprintf( __( "Checkout processed (%s) success!", 'pmpro_ccbill'), $morder->code ) );
+		} else {
+			// Named fields for a quick diagnosis; pmpro_ccbill_Exit() already dumps the full $_REQUEST below.
+			pmpro_ccbill_webhook_log( sprintf(
+				'Checkout FAILED to assign a membership level. Order ID: %s, code: %s, user_id: %s, membership_id: %s, X-pmpro_levelid: %s.',
+				$morder->id,
+				$morder->code,
+				$morder->user_id,
+				$morder->membership_id,
+				isset( $response['X-pmpro_levelid'] ) ? $response['X-pmpro_levelid'] : '(not set)'
+			) );
 		}
 
 		pmpro_ccbill_Exit();
-		
+
 	break;
 
 	case 'Expiration':
@@ -87,11 +99,41 @@ switch ( $event_type ) {
 /**
  *  Change Membership Level for CCBill.
  * * @param  MemberOrder $morder
+ * @param  array        $response The sanitized webhook postback data.
  * @return bool
  * @since 0.1
  */
-function pmpro_ccbill_ChangeMembershipLevel( $morder ) {
+function pmpro_ccbill_ChangeMembershipLevel( $morder, $response = array() ) {
+	global $pmpro_level;
+
 	pmpro_pull_checkout_data_from_order( $morder );
+
+	// Never trust the level ID out of the request itself ($response['X-pmpro_levelid']) as the
+	// source of the level to grant -- a webhook postback can be spoofed by anyone who can guess/
+	// obtain an order ID, and it's only used below as a tamper/mismatch check for logging.
+	// The order's `membership_id` column is set server-side at checkout, before the user is ever
+	// sent to CCBill, and can't be influenced by the postback -- so it's the trustworthy fallback.
+	if ( empty( $pmpro_level->id ) && ! empty( $morder->membership_id ) ) {
+		$fallback_level = pmpro_getLevel( intval( $morder->membership_id ) );
+
+		if ( ! empty( $fallback_level ) ) {
+			pmpro_ccbill_webhook_log( sprintf( 'checkout_level order meta was missing for order #%s. Falling back to the order\'s stored membership_id (%s).', $morder->id, $morder->membership_id ) );
+			$pmpro_level = $fallback_level;
+		}
+	}
+
+	if ( empty( $pmpro_level->id ) ) {
+		pmpro_ccbill_webhook_log( sprintf( 'No membership level could be determined for order #%s (user #%s). Aborting level change.', $morder->id, $morder->user_id ) );
+		return false;
+	}
+
+	// Sanity/fraud check: the level ID CCBill echoed back should match what the order was
+	// actually created for. A mismatch doesn't change what we grant (we always grant based on
+	// the order's own trusted data above), but it's worth flagging for investigation.
+	if ( ! empty( $response['X-pmpro_levelid'] ) && intval( $response['X-pmpro_levelid'] ) !== intval( $pmpro_level->id ) ) {
+		pmpro_ccbill_webhook_log( sprintf( 'WARNING: X-pmpro_levelid (%s) in the postback does not match the level being granted (%s) for order #%s. Possible tampered/replayed request -- investigate.', $response['X-pmpro_levelid'], $pmpro_level->id, $morder->id ) );
+	}
+
  	return pmpro_complete_async_checkout( $morder );
 }
 
