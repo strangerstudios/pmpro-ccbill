@@ -254,7 +254,7 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		foreach ( $settings_to_save as $setting ) {
 			if ( isset( $_REQUEST[ $setting ] ) ) {
-				update_option( 'pmpro_' . $setting, sanitize_text_field( $_REQUEST[ $setting ] ) );
+				update_option( 'pmpro_' . $setting, trim( sanitize_text_field( $_REQUEST[ $setting ] ) ) );
 			}
 		}
 	}
