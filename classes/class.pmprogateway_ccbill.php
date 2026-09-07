@@ -764,7 +764,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		$qargs["action"]		= "cancelSubscription";
 		// See if the site is using subaccount options, if so set the query args accordingly.
 		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_sub_acc ) ) {
+		if ( ! empty( $client_subacc ) ) {
 			$qargs["clientSubacc"] = $client_subacc;
 			$qargs["usingSubacc"] = $client_subacc;
 		}
@@ -835,7 +835,7 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		// See if the site is using subaccount options, if so set the query args accordingly.
 		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_sub_acc ) ) {
+		if ( ! empty( $client_subacc ) ) {
 			$qargs["clientSubacc"] = $client_subacc;
 			$qargs["usingSubacc"] = $client_subacc;
 		}
@@ -959,7 +959,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		$ccbill_args = array();
 		$ccbill_args['action'] = 'refundTransaction';
 		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_sub_acc ) ) {
+		if ( ! empty( $client_subacc ) ) {
 			$ccbill_args['clientSubacc'] = $client_subacc;
 			$ccbill_args['usingSubacc'] = $client_subacc;
 		}
