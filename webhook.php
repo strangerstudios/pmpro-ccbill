@@ -78,7 +78,8 @@ switch ( $event_type ) {
 		
 		$subscription_id = sanitize_text_field( $response['subscriptionId'] );
 
-		pmpro_ccbill_webhook_log( pmpro_handle_subscription_cancellation_at_gateway( $subscription_id, 'ccbill', 'live' ) );
+		// Use the site's configured environment so sandbox subscriptions can be found too, matching how renewals are handled.
+		pmpro_ccbill_webhook_log( pmpro_handle_subscription_cancellation_at_gateway( $subscription_id, 'ccbill', get_option( 'pmpro_gateway_environment' ) ) );
 		pmpro_ccbill_Exit();
 	break;
 
@@ -147,11 +148,104 @@ function pmpro_ccbill_ChangeMembershipLevel( $morder, $response = array() ) {
 /**
  * Add Renewal Order
  *
+ * On PMPro 3.6+ this hands off to the core recurring payment helpers, which look the
+ * subscription up directly by subscription_transaction_id. That means renewals are
+ * processed even when no prior PMPro order exists for the subscription (e.g. it was
+ * linked manually via Memberships > Subscriptions > Link Subscription), the order is
+ * tagged with the subscription's level rather than the user's current level, and
+ * failure emails are rate limited.
+ *
+ * Older PMPro versions fall back to the legacy handler.
+ *
+ * @see https://github.com/strangerstudios/pmpro-ccbill/issues/62
+ *
+ * @param  array  $response The sanitized webhook postback data.
+ * @param  string $status   'success' or 'error'.
+ * @return void
+ */
+function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void {
+	// PMPro < 3.6 doesn't have the helpers. Use the legacy handler, which exits on its own.
+	if ( ! function_exists( 'pmpro_handle_recurring_payment_succeeded_at_gateway' ) || ! function_exists( 'pmpro_handle_recurring_payment_failure_at_gateway' ) ) {
+		pmpro_ccbill_AddRenewal_legacy( $response, $status );
+		return;
+	}
+
+	$order_data = pmpro_ccbill_get_order_data_from_response( $response, $status );
+
+	if ( 'error' === $status ) {
+		pmpro_ccbill_webhook_log( pmpro_handle_recurring_payment_failure_at_gateway( $order_data ) );
+	} else {
+		pmpro_ccbill_webhook_log( pmpro_handle_recurring_payment_succeeded_at_gateway( $order_data ) );
+	}
+}
+
+/**
+ * Build the order data array for the core recurring payment helpers from a CCBill
+ * RenewalSuccess / RenewalFailure postback.
+ *
+ * Keys must match MemberOrder property names; the helpers copy anything that
+ * property_exists() on the order. user_id, membership_id, status, gateway and
+ * gateway_environment are set by the helpers from the subscription record.
+ *
+ * @param  array  $response The sanitized webhook postback data.
+ * @param  string $status   'success' or 'error'.
+ * @return array
+ */
+function pmpro_ccbill_get_order_data_from_response( array $response, $status = 'success' ) : array {
+	$subscription_id = $response['subscriptionId'] ?? '';
+	$timestamp       = $response['timestamp'] ?? '';
+
+	$order_data = array(
+		'gateway'                     => 'ccbill',
+		'gateway_environment'         => get_option( 'pmpro_gateway_environment' ),
+		'subscription_transaction_id' => $subscription_id,
+		'payment_transaction_id'      => $response['transactionId'] ?? '',
+		'timestamp'                   => is_numeric( $timestamp ) ? (int) $timestamp : strtotime( $timestamp ), // Convert to a timestamp if it's not already passed through.
+		'payment_type'                => ! empty( $response['paymentType'] ) ? $response['paymentType'] : 'CCBill',
+		'cardtype'                    => $response['cardType'] ?? '',
+	);
+
+	// CCBill doesn't send a billing address with renewals. Reuse the address from the
+	// most recent order on this subscription, as the legacy handler did.
+	$billing_lookup = new MemberOrder();
+	$billing_lookup->subscription_transaction_id = $subscription_id;
+	$billing_lookup->find_billing_address();
+	if ( ! empty( $billing_lookup->billing ) && ! empty( $billing_lookup->billing->street ) ) {
+		$order_data['billing'] = $billing_lookup->billing;
+	}
+
+	if ( 'error' === $status ) {
+		$order_data['notes'] = sprintf(
+			__( 'Renewal failed: %1$s (%2$s). Retry on %3$s.', 'pmpro-ccbill' ),
+			$response['failureReason'] ?? '',
+			$response['failureCode'] ?? '',
+			$response['nextRetryDate'] ?? ''
+		);
+	} else {
+		$total    = $response['accountingAmount'] ?? 0;
+		$card_exp = $response['expDate'] ?? ''; // MMYY
+
+		$order_data['accountnumber']   = ! empty( $response['last4'] ) ? hideCardNumber( $response['last4'], false ) : ''; // No dashes, to match the format of existing CCBill orders.
+		$order_data['expirationmonth'] = substr( $card_exp, 0, 2 );
+		$order_data['expirationyear']  = strlen( $card_exp ) >= 4 ? '20' . substr( $card_exp, 2 ) : '';
+		$order_data['subtotal']        = $total;
+		$order_data['total']           = $total;
+	}
+
+	return $order_data;
+}
+
+/**
+ * Legacy renewal handler for PMPro < 3.6.
+ *
+ * Requires a prior order for the subscription and bails if none exists. Remove once
+ * PMPro 3.6 is this Add On's minimum supported version.
+ *
  * @param  array  $response
  * @param  string $status
  * @return void
  */
-function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void {
+function pmpro_ccbill_AddRenewal_legacy( array $response, $status = 'success' ) : void {
 	$transaction_id  = $response['transactionId'];
 	$subscription_id = $response['subscriptionId'];
 	$timestamp       = is_numeric( $response['timestamp'] ) ? $response['timestamp'] : strtotime( $response['timestamp'] ); // Convert to a timestamp if it's not already passed through.
