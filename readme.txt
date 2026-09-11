@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 1.0.2
+Stable tag: 1.1
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,13 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.1 - 2026-09-11 =
+* BUG FIX: Fixed an issue where checkouts could fail to assign a membership level when the checkout level data was missing from the order. The level is now determined from the order's stored membership ID. #63 (@andrewlimaza)
+* BUG FIX: Fixed an issue where cancellations, sync with gateway, and refunds would not use the sub account number when one was set. #65 (@andrewlimaza)
+* BUG FIX: Fixed an issue where the webhook account number check could fail due to whitespace in the saved settings. Settings are now trimmed on save. #64 (@andrewlimaza)
+* ENHANCEMENT: Added additional webhook logging for successful and failed checkouts to help with troubleshooting. #63 (@andrewlimaza)
+* ENHANCEMENT: Now passing the level ID to CCBill at checkout and flagging a mismatch in the webhook log. #63 (@andrewlimaza)
+
 = 1.0.2 - 2025-07-10 =
 * ENHANCEMENT: Improved support for Paid Memberships Pro 3.5+ and payment gateway settings. (@JarrydLong)
 
