@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 //load classes init method
 add_action('init', array('PMProGateway_CCBill', 'init'));
 add_filter('pmpro_is_ready', array( 'PMProGateway_CCBill', 'pmpro_is_ccbill_ready' ), 999, 1 );
@@ -253,8 +257,10 @@ class PMProGateway_CCBill extends PMProGateway {
 		);
 
 		foreach ( $settings_to_save as $setting ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Core only calls this from adminpages/paymentsettings.php after check_admin_referer( 'savesettings', 'pmpro_paymentsettings_nonce' ) and a capability check.
 			if ( isset( $_REQUEST[ $setting ] ) ) {
-				update_option( 'pmpro_' . $setting, trim( sanitize_text_field( $_REQUEST[ $setting ] ) ) );
+				// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce and capability verified by core in adminpages/paymentsettings.php.
+				update_option( 'pmpro_' . $setting, trim( sanitize_text_field( wp_unslash( $_REQUEST[ $setting ] ) ) ) );
 			}
 		}
 	}
@@ -642,7 +648,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		$ccbill_url	= add_query_arg( $ccbill_args, $ccbill_flex_forms_url );
 
 		//redirect to CCBill
-		wp_redirect( $ccbill_url );
+		wp_redirect( $ccbill_url ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Offsite redirect to the CCBill payment form by design.
 
 		exit;
 	}
