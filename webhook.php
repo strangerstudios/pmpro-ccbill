@@ -32,6 +32,13 @@ if ( empty( $received_account_number ) || $received_account_number !== $stored_a
 	pmpro_ccbill_Exit();
 }
 
+// CCBill doesn't sign webhooks, so make sure that this request really came from CCBill before processing it.
+$verification_error = pmpro_ccbill_verify_webhook_source( $event_type, $response );
+if ( ! empty( $verification_error ) ) {
+	pmpro_ccbill_webhook_log( $verification_error );
+	pmpro_ccbill_Exit();
+}
+
 // Full reference of event types and responses:
 // https://ccbill.com/doc/webhooks-overview
 switch ( $event_type ) {
@@ -52,6 +59,11 @@ switch ( $event_type ) {
 		}
 
 		$morder->saveOrder();
+
+		// Remember the CCBill subscription ID even for one-time payments so that it can't be reused for another order.
+		if ( ! empty( $morder->id ) && ! empty( $response['subscriptionId'] ) ) {
+			update_pmpro_membership_order_meta( $morder->id, 'ccbill_subscription_id', $response['subscriptionId'] );
+		}
 
 		//run the function to complete checkout
 		if ( pmpro_ccbill_ChangeMembershipLevel( $morder, $response ) ) {
@@ -99,8 +111,115 @@ switch ( $event_type ) {
 	default:
 		do_action('pmpro_ccbill_other_webhook_events', $event_type);
 		pmpro_ccbill_Exit();
-		
-	break;	
+
+	break;
+}
+
+/**
+ * Make sure that a webhook request came from CCBill.
+ *
+ * Requests from CCBill's webhook IP addresses are accepted. Otherwise (e.g. for sites behind a proxy or CDN),
+ * the event must be confirmed through DataLink. If DataLink can't confirm it, the request is rejected.
+ *
+ * @since TBD
+ *
+ * @param string $event_type The webhook event type.
+ * @param array  $response   The sanitized webhook postback data.
+ * @return string An error message if the request could not be verified, or an empty string if it was.
+ */
+function pmpro_ccbill_verify_webhook_source( $event_type, $response ) {
+	global $wpdb;
+
+	// Only REMOTE_ADDR is checked. Forwarding headers can be set by anyone.
+	$remote_ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+
+	// CCBill's webhook IP ranges are x.x.x.1-254 in these blocks: https://ccbill.com/doc/webhooks-user-guide
+	if ( filter_var( $remote_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+		$octets = explode( '.', $remote_ip );
+		$block  = $octets[0] . '.' . $octets[1] . '.' . $octets[2];
+		if ( in_array( $block, array( '64.38.212', '64.38.215', '64.38.240', '64.38.241' ), true ) && $octets[3] >= 1 && $octets[3] <= 254 ) {
+			return '';
+		}
+	}
+
+	// Not from a CCBill IP address, so confirm the subscription through DataLink instead.
+	$error_prefix    = sprintf( 'Webhook rejected. The request came from %s, which is not a CCBill IP address, and could not be confirmed through DataLink.', $remote_ip );
+	$subscription_id = isset( $response['subscriptionId'] ) ? $response['subscriptionId'] : '';
+
+	if ( empty( get_option( 'pmpro_ccbill_datalink_username' ) ) || empty( get_option( 'pmpro_ccbill_datalink_password' ) ) ) {
+		return $error_prefix . ' DataLink credentials are not set.';
+	}
+
+	if ( empty( $subscription_id ) ) {
+		return $error_prefix . ' No subscriptionId was sent.';
+	}
+
+	$data = PMProGateway_CCBill::get_datalink_subscription_status( $subscription_id );
+	if ( is_wp_error( $data ) ) {
+		return $error_prefix . ' ' . $data->get_error_message();
+	}
+
+	// DataLink returns a "results" error code instead of the subscription if it isn't found for this account.
+	if ( ( isset( $data['results'] ) && intval( $data['results'] ) < 1 ) || ! isset( $data['subscriptionStatus'] ) ) {
+		return sprintf( '%s Subscription %s was not found for this CCBill account.', $error_prefix, $subscription_id );
+	}
+
+	if ( 'NewSaleSuccess' === $event_type ) {
+		// The sale must not have been voided, refunded or charged back.
+		foreach ( array( 'voidsIssued', 'refundsIssued', 'chargebacksIssued' ) as $key ) {
+			if ( ! isset( $data[ $key ] ) || 0 !== intval( $data[ $key ] ) ) {
+				return sprintf( '%s Subscription %s has %s: %s.', $error_prefix, $subscription_id, $key, isset( $data[ $key ] ) ? $data[ $key ] : '(missing)' );
+			}
+		}
+
+		$morder = new MemberOrder( isset( $response['X-pmpro_orderid'] ) ? $response['X-pmpro_orderid'] : 0 );
+		if ( empty( $morder->id ) ) {
+			return $error_prefix . ' The order could not be found.';
+		}
+
+		// The subscription must not already be used by another order.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$other_order_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT o.id FROM $wpdb->pmpro_membership_orders o
+				LEFT JOIN $wpdb->pmpro_membership_ordermeta om ON om.pmpro_membership_order_id = o.id AND om.meta_key = 'ccbill_subscription_id'
+				WHERE o.id <> %d AND ( o.subscription_transaction_id = %s OR o.payment_transaction_id = %s OR om.meta_value = %s )
+				LIMIT 1",
+				$morder->id,
+				$subscription_id,
+				$subscription_id,
+				$subscription_id
+			)
+		);
+		if ( ! empty( $other_order_id ) ) {
+			return sprintf( '%s Subscription %s is already used by order #%s.', $error_prefix, $subscription_id, $other_order_id );
+		}
+
+		// The subscription must have been created around the time of the order. CCBill's signupDate (YYYYMMDD) isn't in UTC,
+		// so allow the day before the order's date (time zones) through 2 days after it (slow checkouts or delayed webhooks).
+		$signup_date = ( isset( $data['signupDate'] ) && preg_match( '/^\d{8}$/', $data['signupDate'] ) ) ? strtotime( $data['signupDate'] ) : false;
+		$order_date  = strtotime( gmdate( 'Y-m-d', $morder->getTimestamp( true ) ) );
+		if ( empty( $signup_date ) || $signup_date < $order_date - DAY_IN_SECONDS || $signup_date > $order_date + 2 * DAY_IN_SECONDS ) {
+			return sprintf( '%s Subscription %s signupDate (%s) is not close to the date of order #%s (%s).', $error_prefix, $subscription_id, isset( $data['signupDate'] ) ? $data['signupDate'] : '(missing)', $morder->id, gmdate( 'Ymd', $order_date ) );
+		}
+	} elseif ( 'RenewalSuccess' === $event_type ) {
+		// CCBill must have rebilled the subscription more times than we have recorded renewals for it,
+		// so that a subscription can't be replayed to add renewals that weren't paid. The first paid order is the initial sale.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$paid_orders = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM $wpdb->pmpro_membership_orders
+				WHERE subscription_transaction_id = %s AND status NOT IN ( 'error', 'token', 'pending', 'review' )",
+				$subscription_id
+			)
+		);
+		$recorded_renewals = max( 0, $paid_orders - 1 );
+		if ( ! isset( $data['timesRebilled'] ) || intval( $data['timesRebilled'] ) <= $recorded_renewals ) {
+			return sprintf( '%s Subscription %s has been rebilled %s times and %d renewals are already recorded.', $error_prefix, $subscription_id, isset( $data['timesRebilled'] ) ? $data['timesRebilled'] : '(missing)', $recorded_renewals );
+		}
+	}
+
+	return '';
 }
 
 /**

@@ -228,6 +228,7 @@ class PMProGateway_CCBill extends PMProGateway {
 							</th>
 							<td>
 								<p><?php esc_html_e( 'To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' ); ?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook"); ?></pre></p>
+								<p class="description"><?php esc_html_e( 'Webhooks are only accepted from CCBill\'s IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill\'s IP addresses through.', 'pmpro-ccbill' ); ?></p>
 							</td>
 						</tr>
 					</tbody>
@@ -358,6 +359,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		</th>
 		<td>
 			<p><?php esc_html_e( 'To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' ); ?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook"); ?></pre></p>
+			<p class="description"><?php esc_html_e( 'Webhooks are only accepted from CCBill\'s IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill\'s IP addresses through.', 'pmpro-ccbill' ); ?></p>
 
 		</td>
 	</tr>
@@ -827,76 +829,9 @@ class PMProGateway_CCBill extends PMProGateway {
 			return __( 'Subscription transaction ID is missing.', 'pmpro-ccbill' );
 		}
 
-		//build the URL
-		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
-
-		$qargs = array();
-		$qargs["action"] = "viewSubscriptionStatus";
-
-		// See if the site is using subaccount options, if so set the query args accordingly.
-		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_subacc ) ) {
-			$qargs["clientSubacc"] = $client_subacc;
-			$qargs["usingSubacc"] = $client_subacc;
-		}
-
-		$qargs["subscriptionId"] = $subscription->get_subscription_transaction_id();
-		$qargs["clientAccnum"] = get_option( 'pmpro_ccbill_account_number' );
-		$qargs["username"] = get_option( 'pmpro_ccbill_datalink_username' );
-		$qargs["password"] = get_option( 'pmpro_ccbill_datalink_password' );
-
-		$subscription_link = add_query_arg( $qargs, $sms_link );
-		$response = wp_remote_get( $subscription_link );
-
-		$response_code = wp_remote_retrieve_response_code( $response );
-		$response_message = wp_remote_retrieve_response_message( $response );
-
-		//Bail if error
-		if ( 200 != $response_code ) {
-			$error = sprintf( __( 'Subscription status for subscription id: %s may have failed. Check CCBill Admin to confirm status', 'pmpro-ccbill' ), $subscription->get_subscription_transaction_id() );
-			if ( ! empty( $response_message ) ) {
-				$error .= ' ' . $response_message;
-			}
-			return $error;
-		}
-
-		// Get response body (CSV format)
-		$body = wp_remote_retrieve_body( $response );
-
-		// Bail if empty response
-		if ( empty( $body ) ) {
-			return __( 'Empty response from CCBill.', 'pmpro-ccbill' );
-		}
-
-		/**
-		 * CCBill doesn't have a sandbox accountMock CSV response body, uncomment if need  test it.
-		 * Change values according to the test scenario you need.
-		 * 
-		 * $body = <<<CSV
-		 * 	"cancelDate","signupDate","chargebacksIssued","timesRebilled","expirationDate","recurringSubscription","subscriptionStatus","refundsIssued","voidsIssued"
-		 * 	"20250131","20250131","0","0","20250131","1","0","1","0"
-		 * 	CSV;
-		 */
-
-		// Parse CSV response
-		$lines = explode( "\n", trim( $body ) ); // Split by lines
-		if ( count( $lines ) < 2 ) {
-			return __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' );
-		}
-
-		$headers = str_getcsv( $lines[0] ); // First row contains column names
-		$values = str_getcsv( $lines[1] );  // Second row contains actual data
-
-		// Bail if mismatched columns and values
-		if ( count( $headers ) !== count( $values ) ) {
-			return __( 'Mismatched CSV columns and values.', 'pmpro-ccbill' );
-		}
-
-		// Convert CSV data into an associative array
-		$data = array_combine( $headers, $values );
-		//Bail if no results
-		if ( isset( $data['results'] ) && $data['results'] === "-1" ) {
-			return __( 'No data returned from CCBill.', 'pmpro-ccbill' );
+		$data = self::get_datalink_subscription_status( $subscription->get_subscription_transaction_id() );
+		if ( is_wp_error( $data ) ) {
+			return $data->get_error_message();
 		}
 
 		// Bail if not recurring subscription
@@ -934,6 +869,89 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		// Update subscription object
 		$subscription->set( $update_array );
+	}
+
+	/**
+	 * Get a subscription's status from the CCBill DataLink viewSubscriptionStatus action.
+	 *
+	 * @param string $subscription_id The CCBill subscription ID.
+	 * @return array|WP_Error The DataLink response as an associative array, or a WP_Error on failure.
+	 * @since TBD
+	 */
+	public static function get_datalink_subscription_status( $subscription_id ) {
+		//build the URL
+		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
+
+		$qargs = array();
+		$qargs["action"] = "viewSubscriptionStatus";
+
+		// See if the site is using subaccount options, if so set the query args accordingly.
+		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
+		if ( ! empty( $client_subacc ) ) {
+			$qargs["clientSubacc"] = $client_subacc;
+			$qargs["usingSubacc"] = $client_subacc;
+		}
+
+		$qargs["subscriptionId"] = $subscription_id;
+		$qargs["clientAccnum"] = get_option( 'pmpro_ccbill_account_number' );
+		$qargs["username"] = get_option( 'pmpro_ccbill_datalink_username' );
+		$qargs["password"] = get_option( 'pmpro_ccbill_datalink_password' );
+
+		$subscription_link = add_query_arg( $qargs, $sms_link );
+		$response = wp_remote_get( $subscription_link );
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_message = wp_remote_retrieve_response_message( $response );
+
+		//Bail if error
+		if ( 200 != $response_code ) {
+			$error = sprintf( __( 'Subscription status for subscription id: %s may have failed. Check CCBill Admin to confirm status', 'pmpro-ccbill' ), $subscription_id );
+			if ( ! empty( $response_message ) ) {
+				$error .= ' ' . $response_message;
+			}
+			return new WP_Error( 'pmpro_ccbill_datalink_error', $error );
+		}
+
+		// Get response body (CSV format)
+		$body = wp_remote_retrieve_body( $response );
+
+		// Bail if empty response
+		if ( empty( $body ) ) {
+			return new WP_Error( 'pmpro_ccbill_datalink_error', __( 'Empty response from CCBill.', 'pmpro-ccbill' ) );
+		}
+
+		/**
+		 * CCBill doesn't have a sandbox accountMock CSV response body, uncomment if need  test it.
+		 * Change values according to the test scenario you need.
+		 *
+		 * $body = <<<CSV
+		 * 	"cancelDate","signupDate","chargebacksIssued","timesRebilled","expirationDate","recurringSubscription","subscriptionStatus","refundsIssued","voidsIssued"
+		 * 	"20250131","20250131","0","0","20250131","1","0","1","0"
+		 * 	CSV;
+		 */
+
+		// Parse CSV response
+		$lines = explode( "\n", trim( $body ) ); // Split by lines
+		if ( count( $lines ) < 2 ) {
+			return new WP_Error( 'pmpro_ccbill_datalink_error', __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' ) );
+		}
+
+		$headers = str_getcsv( $lines[0] ); // First row contains column names
+		$values = str_getcsv( $lines[1] );  // Second row contains actual data
+
+		// Bail if mismatched columns and values
+		if ( count( $headers ) !== count( $values ) ) {
+			return new WP_Error( 'pmpro_ccbill_datalink_error', __( 'Mismatched CSV columns and values.', 'pmpro-ccbill' ) );
+		}
+
+		// Convert CSV data into an associative array
+		$data = array_combine( $headers, $values );
+		//Bail if no results
+		if ( isset( $data['results'] ) && $data['results'] === "-1" ) {
+			return new WP_Error( 'pmpro_ccbill_datalink_error', __( 'No data returned from CCBill.', 'pmpro-ccbill' ) );
+		}
+
+		return $data;
 	}
 
 	/**
