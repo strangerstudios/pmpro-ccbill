@@ -12,6 +12,10 @@
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 define( "PMPRO_CCBILL_DIR", dirname( __FILE__ ) );
 
 /**
@@ -60,7 +64,7 @@ function pmpro_ccbill_admin_notice() {
 	if ( get_transient( 'pmpro-ccbill-admin-notice' ) ) { 
 	?>
 		<div class="updated notice is-dismissible">
-			<p><?php printf( __( 'Thank you for activating the Paid Memberships Pro: CCBill Add On. <a href="%s">Visit the payment settings page</a> to configure the CCBill Payment Gateway.', 'pmpro-ccbill' ), esc_url( get_admin_url( null, 'admin.php?page=pmpro-paymentsettings' ) ) ); ?></p>
+			<p><?php echo wp_kses_post( sprintf( __( 'Thank you for activating the Paid Memberships Pro: CCBill Add On. <a href="%s">Visit the payment settings page</a> to configure the CCBill Payment Gateway.', 'pmpro-ccbill' ), esc_url( get_admin_url( null, 'admin.php?page=pmpro-paymentsettings' ) ) ) ); ?></p>
 		</div>
 		<?php
 		// Delete transient, only display this notice once.

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 //set this in your wp-config.php for debugging
 //define( 'PMPRO_CCBILL_DEBUG', true );
 
@@ -428,6 +432,7 @@ function pmpro_ccbill_webhook_log( $s ) {
 */
 function pmpro_ccbill_Exit( $redirect = false ) {
 	global $logstr;
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: the raw request is only written to the debug log.
 	$logstr = var_export( $_REQUEST, true ) . sprintf( __( 'Logged On: %s', 'pmpro-ccbill' ), date_i18n("m/d/Y H:i:s") ) . "\n" . $logstr . "\n-------------\n";
 	//log in file or email?
 	if ( defined( 'PMPRO_CCBILL_DEBUG' ) && PMPRO_CCBILL_DEBUG === 'log' ) {
@@ -446,9 +451,10 @@ function pmpro_ccbill_Exit( $redirect = false ) {
 		wp_mail($log_email, get_option("blogname") . ' ' . __( "CCBill Webhook Log", 'pmpro-ccbill' ), nl2br($logstr));
 	}
 
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: only used to build the confirmation page redirect.
 	if ( !empty( $_REQUEST['pmpro_orderid'] ) ){
 		//Coming back from the gateway, lets redirect back to membership confirmation
-		$morder = new MemberOrder( intval( $_REQUEST['pmpro_orderid'] ) );
+		$morder = new MemberOrder( intval( $_REQUEST['pmpro_orderid'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: only used to build the confirmation page redirect.
 		
 		if ( !empty( $morder ) ) {
 			$redirect = pmpro_url( "confirmation", "?level=" . $morder->membership_id );
@@ -456,7 +462,7 @@ function pmpro_ccbill_Exit( $redirect = false ) {
 	}
 
 	if ( ! empty( $redirect ) ) {
-		wp_redirect( $redirect );
+		wp_redirect( $redirect ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- pmpro_url() is filterable and may legitimately point to another host (e.g. Network Subsite).
 	}
 
 	exit;
