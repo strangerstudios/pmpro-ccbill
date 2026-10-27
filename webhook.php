@@ -125,7 +125,7 @@ switch ( $event_type ) {
  * Requests from CCBill's webhook IP addresses are accepted. Otherwise (e.g. for sites behind a proxy or CDN),
  * the event must be confirmed through DataLink. If DataLink can't confirm it, the request is rejected.
  *
- * @since TBD
+ * @since 1.2
  *
  * @param string $event_type The webhook event type.
  * @param array  $response   The sanitized webhook postback data.
@@ -432,7 +432,7 @@ function pmpro_ccbill_webhook_log( $s ) {
  *
  * Event types, IDs, amounts and the X-pmpro_* fields are kept so that webhooks can still be debugged.
  *
- * @since TBD
+ * @since 1.2
  *
  * @param array $data The webhook request data.
  * @return array The webhook data with personal data masked.
@@ -441,7 +441,7 @@ function pmpro_ccbill_redact_webhook_data( $data ) {
 	/**
 	 * Filter the webhook fields that are masked in the CCBill webhook log.
 	 *
-	 * @since TBD
+	 * @since 1.2
 	 *
 	 * @param array $keys The webhook field names to mask.
 	 */

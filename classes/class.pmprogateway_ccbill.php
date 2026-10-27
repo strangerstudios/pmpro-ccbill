@@ -882,7 +882,7 @@ class PMProGateway_CCBill extends PMProGateway {
 	 *
 	 * @param string $subscription_id The CCBill subscription ID.
 	 * @return array|WP_Error The DataLink response as an associative array, or a WP_Error on failure.
-	 * @since TBD
+	 * @since 1.2
 	 */
 	public static function get_datalink_subscription_status( $subscription_id ) {
 		//build the URL

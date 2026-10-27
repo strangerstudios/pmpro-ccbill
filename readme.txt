@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: paid memberships pro, payment gateway, ccbill
 Requires at least: 5.5
 Tested up to: 6.8
-Stable tag: 1.1
+Stable tag: 1.2
 
 Adds the ability to accept payments using the CCBill Payment Gateway
 
@@ -36,6 +36,12 @@ Please post it in the GitHub issue tracker here: https://github.com/strangerstud
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.2 - 2026-10-27 =
+* SECURITY: Webhook requests are now only processed if they come from CCBill's IP addresses or can be confirmed through DataLink. If your site is behind a proxy or CDN, make sure your DataLink credentials are set. #68 (@dparker1005)
+* SECURITY: Moved the webhook debug log to the Paid Memberships Pro restricted uploads directory so it can't be accessed directly. Customer details in the log are now masked and passwords are never logged. #69 (@andrewlimaza)
+* SECURITY: Resolved Plugin Check security findings, including unslashing gateway settings before saving them and blocking direct access to plugin files. #67 (@dparker1005)
+* ENHANCEMENT: Added the `pmpro_ccbill_webhook_logfile` filter to change the webhook log location and the `pmpro_ccbill_webhook_log_redacted_keys` filter to change which webhook fields are masked in the log. #69 (@andrewlimaza)
+
 = 1.1 - 2026-09-11 =
 * BUG FIX: Fixed an issue where checkouts could fail to assign a membership level when the checkout level data was missing from the order. The level is now determined from the order's stored membership ID. #63 (@andrewlimaza)
 * BUG FIX: Fixed an issue where cancellations, sync with gateway, and refunds would not use the sub account number when one was set. #65 (@andrewlimaza)
