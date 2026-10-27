@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 global $wpdb, $gateway_environment, $logstr;
 
-$logstr = ''; //will put debug info here and write to ccbill_webhook_log.txt
+$logstr = ''; //will put debug info here and write to ccbill-webhook.txt
 
 if ( ! function_exists( 'pmpro_getParam' ) ){
 	return;
@@ -292,7 +292,7 @@ function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void 
 		$old_order    = new MemberOrder();
 		$old_order->getLastMemberOrderBySubscriptionTransactionID( $subscription_id );
 
-		pmpro_ccbill_webhook_log( 'old_order: ' . json_encode( $old_order ) );
+		pmpro_ccbill_webhook_log( 'old_order ID: ' . $old_order->id );
 
 		// Original subscription order cannot be found. Let's Bail.
 		if ( empty( $old_order ) || empty( $old_order->id ) ) {
@@ -311,8 +311,8 @@ function pmpro_ccbill_AddRenewal( array $response, $status = 'success' ) : void 
 
 		$user->membership_level = pmpro_getMembershipLevelForUser( $user_id );
 
-		// Log the user email only for security reasons.
-		pmpro_ccbill_webhook_log( 'WP User Email: ' . json_encode( $user->user_email ) );
+		// Log the user ID only for security reasons.
+		pmpro_ccbill_webhook_log( 'WP User ID: ' . $user_id );
 
 		// Create a new order now.
 		$order = new MemberOrder();
@@ -427,19 +427,86 @@ function pmpro_ccbill_webhook_log( $s ) {
 	global $logstr;
 	$logstr .= "\t" . $s . "\n";
 }
+/**
+ * Mask the customer's personal data in webhook data before it is logged. The email and last name are only partially masked.
+ *
+ * Event types, IDs, amounts and the X-pmpro_* fields are kept so that webhooks can still be debugged.
+ *
+ * @since TBD
+ *
+ * @param array $data The webhook request data.
+ * @return array The webhook data with personal data masked.
+ */
+function pmpro_ccbill_redact_webhook_data( $data ) {
+	/**
+	 * Filter the webhook fields that are masked in the CCBill webhook log.
+	 *
+	 * @since TBD
+	 *
+	 * @param array $keys The webhook field names to mask.
+	 */
+	$redacted_keys = apply_filters( 'pmpro_ccbill_webhook_log_redacted_keys', array(
+		'firstName',
+		'lastName',
+		'email',
+		'address1',
+		'address2',
+		'city',
+		'state',
+		'postalCode',
+		'phoneNumber',
+		'ipAddress',
+		'username',
+		'bin',
+		'last4',
+		'expDate',
+	) );
+	$redacted_keys = array_map( 'strtolower', $redacted_keys );
+
+	foreach ( $data as $key => $value ) {
+		// Never log passwords.
+		if ( 'password' === strtolower( $key ) ) {
+			unset( $data[ $key ] );
+			continue;
+		}
+
+		if ( ! in_array( strtolower( $key ), $redacted_keys, true ) || '' === $value ) {
+			continue;
+		}
+
+		// Keep part of the email and last name so that log entries can be matched to a customer.
+		$at = is_string( $value ) ? strpos( $value, '@' ) : false;
+		if ( ! is_string( $value ) ) {
+			$data[ $key ] = '[redacted]';
+		} elseif ( 'email' === strtolower( $key ) && false !== $at ) {
+			$visible      = min( 2, (int) floor( $at / 2 ) );
+			$data[ $key ] = substr( $value, 0, $visible ) . '***' . substr( $value, $at );
+		} elseif ( 'lastname' === strtolower( $key ) ) {
+			$data[ $key ] = mb_substr( $value, 0, 1 ) . '***';
+		} else {
+			$data[ $key ] = '[redacted]';
+		}
+	}
+
+	return $data;
+}
+
 /*
 	Output webhook log and exit;
 */
 function pmpro_ccbill_Exit( $redirect = false ) {
 	global $logstr;
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only: the raw request is only written to the debug log.
-	$logstr = var_export( $_REQUEST, true ) . sprintf( __( 'Logged On: %s', 'pmpro-ccbill' ), date_i18n("m/d/Y H:i:s") ) . "\n" . $logstr . "\n-------------\n";
+	$logstr = var_export( pmpro_ccbill_redact_webhook_data( $_REQUEST ), true ) . sprintf( __( 'Logged On: %s', 'pmpro-ccbill' ), date_i18n("m/d/Y H:i:s") ) . "\n" . $logstr . "\n-------------\n";
 	//log in file or email?
 	if ( defined( 'PMPRO_CCBILL_DEBUG' ) && PMPRO_CCBILL_DEBUG === 'log' ) {
-		//file
-		$loghandle = fopen(PMPRO_CCBILL_DIR. "/logs/ccbill_webhook.txt", "a+");
-		fwrite($loghandle, $logstr);
-		fclose($loghandle);
+		//file, in PMPro's restricted uploads directory so it can't be fetched directly.
+		if ( function_exists( 'pmpro_get_restricted_file_path' ) ) {
+			$logfile = apply_filters( 'pmpro_ccbill_webhook_logfile', pmpro_get_restricted_file_path( 'logs', 'ccbill-webhook.txt' ) );
+			$loghandle = fopen( $logfile, "a+" );
+			fwrite( $loghandle, $logstr );
+			fclose( $loghandle );
+		}
 	} elseif ( defined( 'PMPRO_CCBILL_DEBUG' ) && false !== PMPRO_CCBILL_DEBUG ) {
 		//email
 		if ( strpos( PMPRO_CCBILL_DEBUG, "@" ) ) {
