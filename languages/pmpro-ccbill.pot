@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-3.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Paid Memberships Pro - CCBill Gateway 1.1\n"
+"Project-Id-Version: Paid Memberships Pro - CCBill Gateway 1.2\n"
 "Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
 "Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-11T11:08:09+00:00\n"
+"POT-Creation-Date: 2026-10-27T13:42:50+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: pmpro-ccbill\n"
@@ -39,271 +39,276 @@ msgstr ""
 msgid "https://www.paidmembershipspro.com"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:58
+#: classes/class.pmprogateway_ccbill.php:62
 msgid "CCBill"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:157
-#: classes/class.pmprogateway_ccbill.php:286
+#: classes/class.pmprogateway_ccbill.php:161
+#: classes/class.pmprogateway_ccbill.php:293
 msgid "Paid Memberships Pro: CCBill is currently in Beta."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:158
-#: classes/class.pmprogateway_ccbill.php:287
+#: classes/class.pmprogateway_ccbill.php:162
+#: classes/class.pmprogateway_ccbill.php:294
 msgid "Read the documentation on getting started with Paid Memberships Pro CCBill &raquo;"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:165
+#: classes/class.pmprogateway_ccbill.php:169
 msgid "Settings"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:173
-#: classes/class.pmprogateway_ccbill.php:296
+#: classes/class.pmprogateway_ccbill.php:177
+#: classes/class.pmprogateway_ccbill.php:303
 msgid "Client Account Number"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:177
-#: classes/class.pmprogateway_ccbill.php:300
+#: classes/class.pmprogateway_ccbill.php:181
+#: classes/class.pmprogateway_ccbill.php:307
 msgid "Enter the client account number from CCBill"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:182
-#: classes/class.pmprogateway_ccbill.php:307
+#: classes/class.pmprogateway_ccbill.php:186
+#: classes/class.pmprogateway_ccbill.php:314
 msgid "Client SubAccount Number"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:186
-#: classes/class.pmprogateway_ccbill.php:311
+#: classes/class.pmprogateway_ccbill.php:190
+#: classes/class.pmprogateway_ccbill.php:318
 msgid "SubAccount Number You will be using"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:191
-#: classes/class.pmprogateway_ccbill.php:317
+#: classes/class.pmprogateway_ccbill.php:195
+#: classes/class.pmprogateway_ccbill.php:324
 msgid "Datalink Username"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:195
-#: classes/class.pmprogateway_ccbill.php:321
+#: classes/class.pmprogateway_ccbill.php:199
+#: classes/class.pmprogateway_ccbill.php:328
 msgid "Datalink username. This is different than your login username. Contact CCBill for more information."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:200
-#: classes/class.pmprogateway_ccbill.php:327
+#: classes/class.pmprogateway_ccbill.php:204
+#: classes/class.pmprogateway_ccbill.php:334
 msgid "Datalink Password"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:204
-#: classes/class.pmprogateway_ccbill.php:331
+#: classes/class.pmprogateway_ccbill.php:208
+#: classes/class.pmprogateway_ccbill.php:338
 msgid "Datalink pasword. This is different than your login password. Contact CCBill for more information."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:209
-#: classes/class.pmprogateway_ccbill.php:337
+#: classes/class.pmprogateway_ccbill.php:213
+#: classes/class.pmprogateway_ccbill.php:344
 msgid "Flex Form ID"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:213
-#: classes/class.pmprogateway_ccbill.php:341
+#: classes/class.pmprogateway_ccbill.php:217
+#: classes/class.pmprogateway_ccbill.php:348
 msgid "Enter the Flex Form ID from CCBill you will be using. Note you may need to have CCBill enable Dynamic Pricing"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:218
-#: classes/class.pmprogateway_ccbill.php:348
+#: classes/class.pmprogateway_ccbill.php:222
+#: classes/class.pmprogateway_ccbill.php:355
 msgid "Salt"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:222
-#: classes/class.pmprogateway_ccbill.php:352
+#: classes/class.pmprogateway_ccbill.php:226
+#: classes/class.pmprogateway_ccbill.php:359
 msgid "Salt value must be provided by CCBill"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:227
-#: classes/class.pmprogateway_ccbill.php:357
+#: classes/class.pmprogateway_ccbill.php:231
+#: classes/class.pmprogateway_ccbill.php:364
 msgid "CCBill Webhook URL"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:230
-#: classes/class.pmprogateway_ccbill.php:360
+#: classes/class.pmprogateway_ccbill.php:234
+#: classes/class.pmprogateway_ccbill.php:367
 msgid "To fully integrate with CCBill, be sure to use the following for your Webhook URL"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:270
+#: classes/class.pmprogateway_ccbill.php:235
+#: classes/class.pmprogateway_ccbill.php:368
+msgid "Webhooks are only accepted from CCBill's IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill's IP addresses through."
+msgstr ""
+
+#: classes/class.pmprogateway_ccbill.php:277
 msgid "CCBill is a global payment gateway that enables online businesses to accept credit card, debit card, and ACH payments while offering built-in fraud protection, subscription billing management, and compliance with international regulations."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:283
+#: classes/class.pmprogateway_ccbill.php:290
 msgid "CCBill Settings"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:396
+#: classes/class.pmprogateway_ccbill.php:404
 msgid "Check Out with CCBill"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:396
+#: classes/class.pmprogateway_ccbill.php:404
 msgid "Submit and Confirm"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:673
+#: classes/class.pmprogateway_ccbill.php:681
 msgid "The requested action failed."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:674
+#: classes/class.pmprogateway_ccbill.php:682
 msgid "The arguments provided to authenticate the merchant were invalid or missing."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:675
+#: classes/class.pmprogateway_ccbill.php:683
 msgid "The subscription id provided was invalid or the subscription type is not supported by the requested action."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:676
+#: classes/class.pmprogateway_ccbill.php:684
 msgid "No record was found for the given subscription."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:677
+#: classes/class.pmprogateway_ccbill.php:685
 msgid "The given subscription was not for the account the merchant was authenticated on."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:678
+#: classes/class.pmprogateway_ccbill.php:686
 msgid "The arguments provided for the requested action were invalid or missing."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:679
+#: classes/class.pmprogateway_ccbill.php:687
 msgid "The requested action was invalid"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:680
+#: classes/class.pmprogateway_ccbill.php:688
 msgid "There was an internal error or a database error and the requested action could not complete."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:681
+#: classes/class.pmprogateway_ccbill.php:689
 msgid "The IP Address the merchant was attempting to authenticate on was not in the valid range."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:682
+#: classes/class.pmprogateway_ccbill.php:690
 msgid "The merchant’s account has been deactivated for use on the Datalink system or the merchant is not permitted to perform the requested action"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:683
+#: classes/class.pmprogateway_ccbill.php:691
 msgid "The merchant has not been set up to use the Datalink system."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:684
+#: classes/class.pmprogateway_ccbill.php:692
 msgid "Subscription is not eligible for a discount, recurring price less than $5.00."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:685
+#: classes/class.pmprogateway_ccbill.php:693
 msgid "The merchant has unsuccessfully logged into the system 3 or more times in the last hour. The merchant should wait an hour before attempting to login again and is advised to review the login information."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:686
+#: classes/class.pmprogateway_ccbill.php:694
 msgid "Merchant over refund threshold"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:687
+#: classes/class.pmprogateway_ccbill.php:695
 msgid "Merchant over void threshold"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:688
+#: classes/class.pmprogateway_ccbill.php:696
 msgid "Transaction limit reached"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:689
+#: classes/class.pmprogateway_ccbill.php:697
 msgid "Purchase limit reached"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:696
+#: classes/class.pmprogateway_ccbill.php:704
 msgid "Error Code Unknown"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:786
-#: classes/class.pmprogateway_ccbill.php:789
+#: classes/class.pmprogateway_ccbill.php:794
+#: classes/class.pmprogateway_ccbill.php:797
 #, php-format
 msgid "Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:796
+#: classes/class.pmprogateway_ccbill.php:804
 #, php-format
 msgid "Cancellation of subscription id: %s may have failed. Check CCBill Admin to confirm cancellation. Error: %s"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:808
+#: classes/class.pmprogateway_ccbill.php:816
 #, php-format
 msgid "Error cancelling subscription at %s"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:827
+#: classes/class.pmprogateway_ccbill.php:835
 msgid "Subscription transaction ID is missing."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:856
+#: classes/class.pmprogateway_ccbill.php:847
+msgid "Subscription is not recurring."
+msgstr ""
+
+#: classes/class.pmprogateway_ccbill.php:914
 #, php-format
 msgid "Subscription status for subscription id: %s may have failed. Check CCBill Admin to confirm status"
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:868
+#: classes/class.pmprogateway_ccbill.php:926
 msgid "Empty response from CCBill."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:884
-#: classes/class.pmprogateway_ccbill.php:989
+#: classes/class.pmprogateway_ccbill.php:942
+#: classes/class.pmprogateway_ccbill.php:1013
 msgid "Invalid CSV response from CCBill."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:892
+#: classes/class.pmprogateway_ccbill.php:950
 msgid "Mismatched CSV columns and values."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:899
+#: classes/class.pmprogateway_ccbill.php:957
 msgid "No data returned from CCBill."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:906
-msgid "Subscription is not recurring."
-msgstr ""
-
-#: classes/class.pmprogateway_ccbill.php:980
+#: classes/class.pmprogateway_ccbill.php:1004
 msgid "Admin: There was a problem processing the refund."
 msgstr ""
 
-#: classes/class.pmprogateway_ccbill.php:1007
+#: classes/class.pmprogateway_ccbill.php:1031
 msgid "Admin: We encountered an issue processing the refund. Please review it in CCBill and complete the refund there."
 msgstr ""
 
-#: pmpro-ccbill.php:63
+#: pmpro-ccbill.php:67
 #, php-format
 msgid "Thank you for activating the Paid Memberships Pro: CCBill Add On. <a href=\"%s\">Visit the payment settings page</a> to configure the CCBill Payment Gateway."
 msgstr ""
 
-#: pmpro-ccbill.php:80
+#: pmpro-ccbill.php:84
 msgid "Configure CCBill"
 msgstr ""
 
-#: pmpro-ccbill.php:97
+#: pmpro-ccbill.php:101
 msgid "View Documentation"
 msgstr ""
 
-#: pmpro-ccbill.php:97
+#: pmpro-ccbill.php:101
 msgid "Docs"
 msgstr ""
 
-#: pmpro-ccbill.php:98
+#: pmpro-ccbill.php:102
 msgid "Visit Customer Support Forum"
 msgstr ""
 
-#: pmpro-ccbill.php:98
+#: pmpro-ccbill.php:102
 msgid "Support"
 msgstr ""
 
-#: webhook.php:292
+#: webhook.php:415
 #, php-format
 msgid "Subscription Cancelled (%s)"
 msgstr ""
 
-#: webhook.php:312
+#: webhook.php:500
 #, php-format
 msgid "Logged On: %s"
 msgstr ""
 
-#: webhook.php:327
+#: webhook.php:518
 msgid "CCBill Webhook Log"
 msgstr ""
