@@ -40,6 +40,7 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 * SECURITY: Webhook requests are now only processed if they come from CCBill's IP addresses or can be confirmed through DataLink. If your site is behind a proxy or CDN, make sure your DataLink credentials are set. #68 (@dparker1005)
 * SECURITY: Moved the webhook debug log to the Paid Memberships Pro restricted uploads directory so it can't be accessed directly. Customer details in the log are now masked and passwords are never logged. #69 (@andrewlimaza)
 * SECURITY: Resolved Plugin Check security findings, including unslashing gateway settings before saving them and blocking direct access to plugin files. #67 (@dparker1005)
+* BUG FIX: Fixed an issue where cancellations, refunds and subscription syncs could fail with "The merchant has not been set up to use the Datalink system" when the DataLink user was set up on the main CCBill account. Requests now work whether the DataLink user is set up on the main account or on a subaccount. (@andrewlimaza)
 * ENHANCEMENT: Added the `pmpro_ccbill_webhook_logfile` filter to change the webhook log location and the `pmpro_ccbill_webhook_log_redacted_keys` filter to change which webhook fields are masked in the log. #69 (@andrewlimaza)
 
 = 1.1 - 2026-09-11 =
