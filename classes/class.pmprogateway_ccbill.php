@@ -228,7 +228,7 @@ class PMProGateway_CCBill extends PMProGateway {
 							</th>
 							<td>
 								<p><?php esc_html_e( 'To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' ); ?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook"); ?></pre></p>
-								<p class="description"><?php esc_html_e( 'Webhooks are only accepted from CCBill\'s IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill\'s IP addresses through.', 'pmpro-ccbill' ); ?></p>
+								<p class="description"><?php esc_html_e( "Webhooks are only accepted from CCBill's IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill's IP addresses through.", 'pmpro-ccbill' ); ?></p>
 							</td>
 						</tr>
 					</tbody>
@@ -359,7 +359,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		</th>
 		<td>
 			<p><?php esc_html_e( 'To fully integrate with CCBill, be sure to use the following for your Webhook URL', 'pmpro-ccbill' ); ?> <pre><?php echo esc_url( admin_url("admin-ajax.php") . "?action=ccbill-webhook"); ?></pre></p>
-			<p class="description"><?php esc_html_e( 'Webhooks are only accepted from CCBill\'s IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill\'s IP addresses through.', 'pmpro-ccbill' ); ?></p>
+			<p class="description"><?php esc_html_e( "Webhooks are only accepted from CCBill's IP addresses unless they can be confirmed through DataLink, so if your site is behind a proxy or CDN, make sure your DataLink credentials are set and working or allow CCBill's IP addresses through.", 'pmpro-ccbill' ); ?></p>
 
 		</td>
 	</tr>
