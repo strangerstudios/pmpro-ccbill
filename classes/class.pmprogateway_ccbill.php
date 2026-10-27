@@ -264,6 +264,9 @@ class PMProGateway_CCBill extends PMProGateway {
 				update_option( 'pmpro_' . $setting, trim( sanitize_text_field( wp_unslash( $_REQUEST[ $setting ] ) ) ) );
 			}
 		}
+
+		// The DataLink credentials may have changed, so check which level they're set up on again.
+		delete_option( 'pmpro_ccbill_datalink_level' );
 	}
 
 	/**
@@ -672,7 +675,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		return $this->cancel_subscription_at_gateway( $order->subscription_transaction_id );
 	}
 
-	function pmprocb_return_api_response( $code ) {
+	static function pmprocb_return_api_response( $code ) {
 
 		/**
 		 * Error codes and explanations obtained from CCBill documentation
@@ -765,24 +768,10 @@ class PMProGateway_CCBill extends PMProGateway {
 	 * @since TBD
 	 */
 	function cancel_subscription_at_gateway( $subscription_id ) {
-		//build the URL
-		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
-
-		$qargs = array();
-		$qargs["action"]		= "cancelSubscription";
-		// See if the site is using subaccount options, if so set the query args accordingly.
-		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_subacc ) ) {
-			$qargs["clientSubacc"] = $client_subacc;
-			$qargs["usingSubacc"] = $client_subacc;
-		}
-		$qargs["subscriptionId"] = $subscription_id;
-		$qargs["clientAccnum"]	= get_option('pmpro_ccbill_account_number');
-		$qargs["username"]		= get_option('pmpro_ccbill_datalink_username'); //must be provided by CCBill
-		$qargs["password"]		= get_option('pmpro_ccbill_datalink_password'); //must be provided by CCBill
-
-		$cancel_link	= add_query_arg( $qargs, $sms_link );
-		$response		= wp_remote_get( $cancel_link );
+		$response = self::datalink_request( array(
+			'action'         => 'cancelSubscription',
+			'subscriptionId' => $subscription_id,
+		) );
 
 		$response_code		= wp_remote_retrieve_response_code( $response );
 		$response_message	= wp_remote_retrieve_response_message( $response );
@@ -878,6 +867,74 @@ class PMProGateway_CCBill extends PMProGateway {
 	}
 
 	/**
+	 * Send a request to the CCBill DataLink subscription management API.
+	 *
+	 * A DataLink user is set up either on the main account or on a single subaccount, and CCBill returns
+	 * error -10 when a request authenticates on the other level. The level that last worked is tried first,
+	 * then the other one.
+	 *
+	 * @since 1.2
+	 *
+	 * @param array $qargs The DataLink action and its arguments, e.g. action and subscriptionId.
+	 * @return array|WP_Error The response from wp_remote_get().
+	 */
+	public static function datalink_request( $qargs ) {
+		$qargs['clientAccnum'] = get_option( 'pmpro_ccbill_account_number' );
+		$qargs['username']     = get_option( 'pmpro_ccbill_datalink_username' );
+		$qargs['password']     = get_option( 'pmpro_ccbill_datalink_password' );
+
+		// The main account is tried first unless the DataLink user is known to be set up on the subaccount.
+		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
+		$levels        = array( 'account' );
+		if ( ! empty( $client_subacc ) ) {
+			$levels = 'subaccount' === get_option( 'pmpro_ccbill_datalink_level' ) ? array( 'subaccount', 'account' ) : array( 'account', 'subaccount' );
+		}
+
+		foreach ( $levels as $level ) {
+			$level_args = $qargs;
+			if ( 'subaccount' === $level ) {
+				$level_args['clientSubacc'] = $client_subacc;
+			}
+
+			$response = wp_remote_get( add_query_arg( urlencode_deep( $level_args ), 'https://datalink.ccbill.com/utils/subscriptionManagement.cgi' ) );
+
+			if ( '-10' !== self::get_datalink_result_code( $response ) ) {
+				if ( count( $levels ) > 1 && 200 == wp_remote_retrieve_response_code( $response ) && get_option( 'pmpro_ccbill_datalink_level' ) !== $level ) {
+					update_option( 'pmpro_ccbill_datalink_level', $level, false );
+				}
+				break;
+			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Get the result code from a DataLink response.
+	 *
+	 * Actions that don't return data, and failed requests, return a "results" column with the result code.
+	 *
+	 * @since 1.2
+	 *
+	 * @param array|WP_Error $response The response from wp_remote_get().
+	 * @return string|null The result code, or null if the response doesn't have one.
+	 */
+	public static function get_datalink_result_code( $response ) {
+		$lines = explode( "\n", trim( wp_remote_retrieve_body( $response ) ) );
+		if ( count( $lines ) < 2 ) {
+			return null;
+		}
+
+		$headers = str_getcsv( trim( $lines[0] ), ',', '"', '\\' );
+		$values  = str_getcsv( trim( $lines[1] ), ',', '"', '\\' );
+		if ( 'results' !== $headers[0] || ! isset( $values[0] ) ) {
+			return null;
+		}
+
+		return trim( $values[0] );
+	}
+
+	/**
 	 * Get a subscription's status from the CCBill DataLink viewSubscriptionStatus action.
 	 *
 	 * @param string $subscription_id The CCBill subscription ID.
@@ -885,26 +942,10 @@ class PMProGateway_CCBill extends PMProGateway {
 	 * @since 1.2
 	 */
 	public static function get_datalink_subscription_status( $subscription_id ) {
-		//build the URL
-		$sms_link = "https://datalink.ccbill.com/utils/subscriptionManagement.cgi";
-
-		$qargs = array();
-		$qargs["action"] = "viewSubscriptionStatus";
-
-		// See if the site is using subaccount options, if so set the query args accordingly.
-		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_subacc ) ) {
-			$qargs["clientSubacc"] = $client_subacc;
-			$qargs["usingSubacc"] = $client_subacc;
-		}
-
-		$qargs["subscriptionId"] = $subscription_id;
-		$qargs["clientAccnum"] = get_option( 'pmpro_ccbill_account_number' );
-		$qargs["username"] = get_option( 'pmpro_ccbill_datalink_username' );
-		$qargs["password"] = get_option( 'pmpro_ccbill_datalink_password' );
-
-		$subscription_link = add_query_arg( $qargs, $sms_link );
-		$response = wp_remote_get( $subscription_link );
+		$response = self::datalink_request( array(
+			'action'         => 'viewSubscriptionStatus',
+			'subscriptionId' => $subscription_id,
+		) );
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_message = wp_remote_retrieve_response_message( $response );
@@ -942,8 +983,8 @@ class PMProGateway_CCBill extends PMProGateway {
 			return new WP_Error( 'pmpro_ccbill_datalink_error', __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' ) );
 		}
 
-		$headers = str_getcsv( $lines[0] ); // First row contains column names
-		$values = str_getcsv( $lines[1] );  // Second row contains actual data
+		$headers = str_getcsv( $lines[0], ',', '"', '\\' ); // First row contains column names
+		$values = str_getcsv( $lines[1], ',', '"', '\\' );  // Second row contains actual data
 
 		// Bail if mismatched columns and values
 		if ( count( $headers ) !== count( $values ) ) {
@@ -952,9 +993,9 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		// Convert CSV data into an associative array
 		$data = array_combine( $headers, $values );
-		//Bail if no results
-		if ( isset( $data['results'] ) && $data['results'] === "-1" ) {
-			return new WP_Error( 'pmpro_ccbill_datalink_error', __( 'No data returned from CCBill.', 'pmpro-ccbill' ) );
+		//Bail if CCBill returned an error code instead of the subscription
+		if ( isset( $data['results'] ) && intval( $data['results'] ) < 1 ) {
+			return new WP_Error( 'pmpro_ccbill_datalink_error', self::pmprocb_return_api_response( $data['results'] ) );
 		}
 
 		return $data;
@@ -978,24 +1019,11 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		$transaction_id = $order->payment_transaction_id;
 
-		$ccbill_url = 'https://datalink.ccbill.com/utils/subscriptionManagement.cgi';
-
-		$ccbill_args = array();
-		$ccbill_args['action'] = 'refundTransaction';
-		$client_subacc = get_option( 'pmpro_ccbill_subaccount_number' );
-		if ( ! empty( $client_subacc ) ) {
-			$ccbill_args['clientSubacc'] = $client_subacc;
-			$ccbill_args['usingSubacc'] = $client_subacc;
-		}
-		$ccbill_args['clientAccnum'] = get_option('pmpro_ccbill_account_number');
-		$ccbill_args['username'] = get_option('pmpro_ccbill_datalink_username');
-		$ccbill_args['password'] = get_option('pmpro_ccbill_datalink_password');
-		$ccbill_args['subscriptionId'] = $transaction_id; //CCBill refers to it as subscriptionId.
-
 		// Make the call to CCBill now.
-		$ccbill_url = add_query_arg( $ccbill_args, $ccbill_url );
-
-		$response = wp_remote_get( $ccbill_url );
+		$response = self::datalink_request( array(
+			'action'         => 'refundTransaction',
+			'subscriptionId' => $transaction_id, //CCBill refers to it as subscriptionId.
+		) );
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_message = wp_remote_retrieve_response_message( $response );
