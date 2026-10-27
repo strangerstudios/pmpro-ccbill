@@ -428,7 +428,7 @@ function pmpro_ccbill_webhook_log( $s ) {
 	$logstr .= "\t" . $s . "\n";
 }
 /**
- * Mask the customer's personal data in webhook data before it is logged.
+ * Mask the customer's personal data in webhook data before it is logged. The email and last name are only partially masked.
  *
  * Event types, IDs, amounts and the X-pmpro_* fields are kept so that webhooks can still be debugged.
  *
@@ -457,7 +457,6 @@ function pmpro_ccbill_redact_webhook_data( $data ) {
 		'phoneNumber',
 		'ipAddress',
 		'username',
-		'password',
 		'bin',
 		'last4',
 		'expDate',
@@ -465,7 +464,26 @@ function pmpro_ccbill_redact_webhook_data( $data ) {
 	$redacted_keys = array_map( 'strtolower', $redacted_keys );
 
 	foreach ( $data as $key => $value ) {
-		if ( in_array( strtolower( $key ), $redacted_keys, true ) && '' !== $value ) {
+		// Never log passwords.
+		if ( 'password' === strtolower( $key ) ) {
+			unset( $data[ $key ] );
+			continue;
+		}
+
+		if ( ! in_array( strtolower( $key ), $redacted_keys, true ) || '' === $value ) {
+			continue;
+		}
+
+		// Keep part of the email and last name so that log entries can be matched to a customer.
+		$at = is_string( $value ) ? strpos( $value, '@' ) : false;
+		if ( ! is_string( $value ) ) {
+			$data[ $key ] = '[redacted]';
+		} elseif ( 'email' === strtolower( $key ) && false !== $at ) {
+			$visible      = min( 2, (int) floor( $at / 2 ) );
+			$data[ $key ] = substr( $value, 0, $visible ) . '***' . substr( $value, $at );
+		} elseif ( 'lastname' === strtolower( $key ) ) {
+			$data[ $key ] = mb_substr( $value, 0, 1 ) . '***';
+		} else {
 			$data[ $key ] = '[redacted]';
 		}
 	}
