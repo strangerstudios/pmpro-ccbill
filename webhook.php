@@ -53,6 +53,18 @@ switch ( $event_type ) {
 
 		pmpro_ccbill_webhook_log( sprintf( 'NewSaleSuccess received. X-pmpro_orderid: %s, Loaded order ID: %s, Loaded order user_id: %s', $order_id, $morder->id, $morder->user_id ) );
 
+		if ( empty( $morder->id ) ) {
+			pmpro_ccbill_webhook_log( sprintf( 'Order %s could not be found. Skipping.', $order_id ) );
+			pmpro_ccbill_Exit();
+		}
+
+		// Only complete orders that are still waiting for payment. CCBill can resend NewSaleSuccess, and completing
+		// the checkout again would cancel the member's new subscription at CCBill as a "previous" subscription.
+		if ( ! in_array( $morder->status, array( 'token', 'pending' ), true ) ) {
+			pmpro_ccbill_webhook_log( sprintf( 'Order #%s has already been processed (status: %s). Skipping duplicate NewSaleSuccess for subscription %s.', $morder->id, $morder->status, isset( $response['subscriptionId'] ) ? $response['subscriptionId'] : '(not set)' ) );
+			pmpro_ccbill_Exit();
+		}
+
 		// Let's save the order data that may be needed. Ensure that there is a recurring amount passed in, sandbox passes this even for one-time payments.
 		if ( ! empty( $response['subscriptionId'] ) && (  isset( $response['subscriptionRecurringPrice'] ) && intval( $response['subscriptionRecurringPrice'] ) > 0 ) ) {
 			$morder->subscription_transaction_id = sanitize_text_field( $response['subscriptionId'] );
