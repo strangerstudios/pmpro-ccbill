@@ -114,19 +114,28 @@ class PMProGateway_CCBill extends PMProGateway {
 	 * Check if all fields are complete
 	 */
 	static function pmpro_is_ccbill_ready( $ready ){
+		global $pmpro_gateway_ready, $pmpro_pages_ready;
 
-		if ( get_option('pmpro_ccbill_account_number') == "" ||
-		get_option('pmpro_ccbill_subaccount_number') == "" ||
-		get_option('pmpro_ccbill_flex_form_id') == "" ||
-		get_option('pmpro_ccbill_salt') == "" ||
-		get_option('pmpro_ccbill_datalink_username') == "" ||
-		get_option('pmpro_ccbill_datalink_password') == "" ){
-			$ready = false;
-		} else {
-			$ready = true;
+		// Only check the CCBill settings when CCBill is the active gateway.
+		if ( 'ccbill' !== get_option( 'pmpro_gateway' ) ) {
+			return $ready;
 		}
 
-		return $ready;
+		// Core marks the gateway as ready when there are no paid levels. Otherwise, check the CCBill settings.
+		if ( empty( $pmpro_gateway_ready ) ) {
+			if ( get_option('pmpro_ccbill_account_number') == "" ||
+			get_option('pmpro_ccbill_subaccount_number') == "" ||
+			get_option('pmpro_ccbill_flex_form_id') == "" ||
+			get_option('pmpro_ccbill_salt') == "" ||
+			get_option('pmpro_ccbill_datalink_username') == "" ||
+			get_option('pmpro_ccbill_datalink_password') == "" ){
+				$pmpro_gateway_ready = false;
+			} else {
+				$pmpro_gateway_ready = true;
+			}
+		}
+
+		return ( $pmpro_gateway_ready && $pmpro_pages_ready );
 
 	}
 
