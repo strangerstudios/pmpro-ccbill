@@ -1010,7 +1010,9 @@ class PMProGateway_CCBill extends PMProGateway {
 
 		$response_values = explode( "\n", trim( $response_body ) ); // Split by response_values
 		if ( count( $response_values ) < 2 ) {
-			return __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' );
+			$order->notes = trim( $order->notes . ' ' . __( 'Admin: There was a problem processing the refund.', 'pmpro-ccbill' ) . ' ' . __( 'Invalid CSV response from CCBill.', 'pmpro-ccbill' ) );
+			$order->SaveOrder();
+			return false;
 		}
 
 		// Strip out additional double quotation marks so we can cast to an int to compare.
@@ -1020,6 +1022,7 @@ class PMProGateway_CCBill extends PMProGateway {
 		if ( intval( $return_value ) === 1 ) {
 			$success = true;
 			$order->status = 'refunded';
+			$user = get_userdata( $order->user_id );
 			//send an email to the member
 			$myemail = new PMProEmail();
 			$myemail->sendRefundedEmail( $user, $order );
