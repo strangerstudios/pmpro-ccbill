@@ -572,7 +572,9 @@ class PMProGateway_CCBill extends PMProGateway {
 		$level = $order->getMembershipLevelAtCheckout();
 		if ( pmpro_isLevelRecurring( $level ) ) {
 
-			$recurring_price = number_format( $level->billing_amount, 2, ".", "" );
+			// Taxes on the recurring amount, the same as the initial amount.
+			$recurring_tax   = $order->getTaxForPrice( $level->billing_amount );
+			$recurring_price = number_format( pmpro_round_price( (float) $level->billing_amount + (float) $recurring_tax ), 2, ".", "" );
 
 			$recurring_period = '';
 
